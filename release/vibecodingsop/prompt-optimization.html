@@ -1113,7 +1113,6 @@
       }
       // 2. 元数据整合内容
       if (integrationContent) {
-        parts.push('# Core Task Instructions');
         parts.push('');
         parts.push(integrationContent);
       }
@@ -1201,11 +1200,22 @@
       });
     }
 
+    var WORK_DIR = '';
+    fetch('/api/config')
+      .then(function(r) { return r.json(); })
+      .then(function(cfg) {
+        if (cfg && cfg.workDir) {
+          WORK_DIR = cfg.workDir;
+        }
+      })
+      .catch(function() {});
+
     function sendUpdateJournal(fileName) {
+      var filePath = WORK_DIR ? (WORK_DIR + '/prompt/.historylog/' + fileName) : ('../prompt/.historylog/' + fileName);
       parent.postMessage({
         type: 'UPDATE_JOURNAL',
         fileName: fileName,
-        filePath: '../prompt/.historylog/' + fileName,
+        filePath: filePath,
         selectedNodeIds: selectedNodeIds
       }, '*');
     }

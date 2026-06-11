@@ -770,16 +770,14 @@
     var m = inheritModule || '';
     var t = inheritType || 'R';
     var node = { id: 'n'+(nextId++), uuid: generateUUID(), title: title||'新节点', seq: s, status:'N', type:t, priority:p, mainline:'🟢', module:m, created:now(), estDays:'0', request:'', nodeInfo:'', journal:'', aiTaskJournal:'', collapsed:false, children:[], _manualPos:false, _x:0, _y:0 };
-    node.nodeInfo = generateMetadata(node);
+    node.nodeInfo = generateMetadata(node, 0);
     return node;
   }
 
   // --- Priority Default ---
   var DEFAULT_PRIORITY = '2️⃣';
 
-  function generateMetadata(node, depth) {
-    depth = depth || 0;
-    if (depth > 3) return ''; // prevent infinite recursion
+  function generateMetadata(node, level) {
     var typeLabel = TYPE_LABELS[node.type] || 'requirement';
     var statusLabel = STATUS_LABELS[node.status] || 'new';
     var parentTitle = '';
@@ -788,7 +786,21 @@
       parentTitle = pTitleNode.title || '';
       if (parentTitle.length > 20) parentTitle = parentTitle.substring(0, 20) + '...';
     }
-    var tpl = 'todo-' + typeLabel + '::' + (node.title||'') + '\n\n';
+    if (level === undefined) {
+      level = 0;
+      if (data && node.id !== data.id) {
+        var foundLevel = getLevel(data, node.id, 0);
+        if (foundLevel >= 0) level = foundLevel;
+      }
+    }
+    var heading = '';
+    if (level === 0) {
+      heading = (node.title || '') + '\n\n';
+    } else {
+      var hashes = new Array(level + 2).join('#');
+      heading = hashes + ' ' + (node.title || '') + '\n\n';
+    }
+    var tpl = heading;
     tpl += '```\n';
     tpl += typeLabel + 'UUID::' + (node.uuid || '') + '\n';
     tpl += typeLabel + 'ID::' + node.id + '\n';
@@ -818,7 +830,12 @@
   function refreshMetadata(nodeId) {
     var node = findNode(data, nodeId);
     if (!node) return;
-    node.nodeInfo = generateMetadata(node);
+    var level = 0;
+    if (data && node.id !== data.id) {
+      var foundLevel = getLevel(data, node.id, 0);
+      if (foundLevel >= 0) level = foundLevel;
+    }
+    node.nodeInfo = generateMetadata(node, level);
   }
 
   // Cascade inherit Priority/Module from parent to all descendants
@@ -834,7 +851,12 @@
       if (parentNode.module) {
         child.module = parentNode.module;
       }
-      child.nodeInfo = generateMetadata(child);
+      var childLevel = 0;
+      if (data && child.id !== data.id) {
+        var foundLevel = getLevel(data, child.id, 0);
+        if (foundLevel >= 0) childLevel = foundLevel;
+      }
+      child.nodeInfo = generateMetadata(child, childLevel);
       cascadeInherit(child);
     }
   }
@@ -1880,7 +1902,7 @@
     if (!node) return;
     var typeLabel = TYPE_LABELS[node.type] || 'requirement';
     var journalKey = typeLabel + 'AITaskJournal';
-    var entry = '[[' + fileName + ']]';
+    var entry = '[[' + filePath + ']]';
     var pathEntry = '[[' + filePath + ']]';
 
     // 1. Update node.aiTaskJournal (for frontmatter generation)
@@ -2009,9 +2031,14 @@
     var inhP = (node.priority !== '2️⃣') ? node.priority : undefined;
     var inhM = node.module || undefined;
     var child = createNode('', undefined, inhP, inhM, node.type);
-    child.nodeInfo = generateMetadata(child);
     node.collapsed = false;
     node.children.push(child);
+    var childLevel = 0;
+    if (data && child.id !== data.id) {
+      var foundLevel = getLevel(data, child.id, 0);
+      if (foundLevel >= 0) childLevel = foundLevel;
+    }
+    child.nodeInfo = generateMetadata(child, childLevel);
     selectedId = child.id;
     selectedIds.clear();
     selectedIds.add(child.id);
@@ -2045,10 +2072,15 @@
     var inhP = (parent.priority !== '2️⃣') ? parent.priority : undefined;
     var inhM = parent.module || undefined;
     var sibling = createNode('', undefined, inhP, inhM, parent.type);
-    sibling.nodeInfo = generateMetadata(sibling);
     var idx = parent.children.findIndex(function(c) { return c.id===node.id; });
     if (before) parent.children.splice(idx, 0, sibling);
     else parent.children.splice(idx+1, 0, sibling);
+    var siblingLevel = 0;
+    if (data && sibling.id !== data.id) {
+      var foundLevel = getLevel(data, sibling.id, 0);
+      if (foundLevel >= 0) siblingLevel = foundLevel;
+    }
+    sibling.nodeInfo = generateMetadata(sibling, siblingLevel);
     selectedId = sibling.id;
     selectedIds.clear();
     selectedIds.add(sibling.id);    fullRender();
@@ -2150,7 +2182,7 @@
     }
 
     // Pattern: # todo-requirement::Title  or  ## todo-feature::Title  etc.
-    var todoHeadingPattern = /^(#{1,6})\s+todo-(requirement|feature|prompt)::(.+)$/;
+    var todoHeadingPattern = /^(#{1,6})\s+(?:todo-)?(requirement|feature|prompt)::(.+)$/;
     // Pattern 2: ## Title (simple heading without todo prefix)
     var simpleHeadingPattern = /^(#{1,6})\s+(.+)$/;
 
@@ -2165,16 +2197,16 @@
     for (var i = 0; i < lines.length; i++) {
       var line = lines[i];
 
-      // Check for heading pattern first (even if in code block, headings won't match the pattern)
+      // Check for heading pattern first
       var headingMatch = line.match(todoHeadingPattern);
       
-      // If no todo-heading match, try simple heading (but only at level >= 2)
+      // If no todo-heading match, try simple heading
       if (!headingMatch) {
         var simpleMatch = line.match(simpleHeadingPattern);
-        if (simpleMatch && simpleMatch[1].length >= 2) {
-          // Convert simple heading to equivalent todo-heading
+        if (simpleMatch) {
+          // Convert simple heading to equivalent format
           // Array format: [fullMatch, hashes, type, title]
-          headingMatch = [line, simpleMatch[1], 'requirement', simpleMatch[2]];
+          headingMatch = [line, simpleMatch[1], null, simpleMatch[2]];
         }
       }
 
@@ -2183,9 +2215,9 @@
         savePrevReq();
 
         var level = headingMatch[1].length - 1; // # = 0, ## = 1, etc.
-        var typeLabel = headingMatch[2].trim();
+        var typeLabel = headingMatch[2];
         var title = headingMatch[3].trim();
-        var typeVal = TYPE_REVERSE[typeLabel] || 'R';
+        var typeVal = typeLabel ? (TYPE_REVERSE[typeLabel.trim()] || 'R') : 'R';
         var node = createNode(title, null, null, null, typeVal);
         // Try to preserve existing node by level|type|title
         var existKey = level + '|' + typeVal + '|' + title;
@@ -2195,12 +2227,12 @@
           node.uuid = existingNode.uuid;
           node.created = existingNode.created;
         }
-        node.nodeInfo = generateMetadata(node);
+        node.nodeInfo = generateMetadata(node, level);
         currentNode = node;
         currentLevel = level;
         inCodeBlock = false;
 
-        if (level === 0) {
+        if (level === 0 || !root) {
           root = node;
           stack = [{ node: node, level: 0 }];
         } else {
@@ -2213,15 +2245,30 @@
           parent.children.push(node);
           stack.push({ node: node, level: level });
         }
+      } else if (!root && line.trim() && !line.startsWith('```')) {
+        // First non-empty, non-code-block line before any heading is root title (new format)
+        savePrevReq();
+        var node = createNode(line.trim(), null, null, null, 'R');
+        node.nodeInfo = generateMetadata(node, 0);
+        currentNode = node;
+        currentLevel = 0;
+        inCodeBlock = false;
+        root = node;
+        stack = [{ node: node, level: 0 }];
       } else if (currentNode && line.trim() === '```') {
         inCodeBlock = !inCodeBlock;
         // Don't add code fence markers to request
       } else if (inCodeBlock && currentNode) {
         // Parse metadata lines like: requirementID::n1, requirementStatus::ongoing, etc.
-        var metaMatch = line.match(/^(?:requirement|feature|prompt)(\w+)::(.*)$/);
+        var metaMatch = line.match(/^(requirement|feature|prompt)(\w+)::(.*)$/);
         if (metaMatch) {
-          var key = metaMatch[1];
-          var val = metaMatch[2];
+          var typePrefix = metaMatch[1];
+          var key = metaMatch[2];
+          var val = metaMatch[3];
+          // Infer type from frontmatter prefix
+          if (key === 'UUID') {
+            currentNode.type = TYPE_REVERSE[typePrefix] || 'R';
+          }
           switch (key) {
             case 'Status':
               currentNode.status = STATUS_REVERSE[val] || 'N';
@@ -2262,11 +2309,11 @@
     savePrevReq();
 
     // Update nodeInfo for all nodes with parsed data
-    function updateNodeInfo(node) {
-      node.nodeInfo = generateMetadata(node);
-      node.children.forEach(updateNodeInfo);
+    function updateNodeInfo(node, level) {
+      node.nodeInfo = generateMetadata(node, level);
+      node.children.forEach(function(child) { updateNodeInfo(child, level + 1); });
     }
-    if (root) updateNodeInfo(root);
+    if (root) updateNodeInfo(root, 0);
 
     return root || createNode('根节点');
   }
@@ -2290,7 +2337,11 @@
       var hashes = '';
       for (var i = 0; i <= level; i++) hashes += '#';
       var typeLabel = TYPE_LABELS[node.type] || 'requirement';
-      lines.push(hashes + ' todo-' + typeLabel + '::' + (node.title || ''));
+      if (level === 0) {
+        lines.push(node.title || '');
+      } else {
+        lines.push(hashes + ' ' + (node.title || ''));
+      }
       lines.push('');
       // metadata code block
       var statusLabel = STATUS_LABELS[node.status] || 'new';
@@ -3087,7 +3138,7 @@
     layoutNodeVariableWidth(data, 0, 0, nodeWidths);
     // Build parent map and update metadata
     buildParentMap(data);
-    (function updateMeta(n) { n.nodeInfo = generateMetadata(n); (n.children || []).forEach(updateMeta); })(data);
+    (function updateMeta(n, lv) { n.nodeInfo = generateMetadata(n, lv); (n.children || []).forEach(function(c) { updateMeta(c, lv + 1); }); })(data, 0);
     // Render without re-layout (positions already set by layoutNodeVariableWidth)
     renderNodes();
     renderConnections();
@@ -6578,6 +6629,9 @@
     .then(function(cfg) {
       if (cfg && typeof cfg.isProd === 'boolean') {
         appConfig.isProd = cfg.isProd;
+      }
+      if (cfg && cfg.workDir) {
+        appConfig.workDir = cfg.workDir;
       }
       var promptPathValue = document.getElementById('logPromptPathValue');
       if (promptPathValue && cfg && cfg.workDir) {
