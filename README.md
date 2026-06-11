@@ -1,5 +1,7 @@
 # VibeCodingSOP — Markdown Mind Map Editor
 
+[中文 Chinese](https://github.com/edinlove/VibeCodingSOP/blob/main/README-CN.md)
+
 A mind map editor tailored for the Vibe Coding workflow, supporting Markdown import/export, node metadata management, and a Prompt Template Library. It also offers three runtime modes: standalone server, VS Code extension, and Obsidian plugin.
 
 ## Core Features
