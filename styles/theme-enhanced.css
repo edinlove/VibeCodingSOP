@@ -1,0 +1,103 @@
+/* =========================================================
+   Theme Enhanced — 黑白高对比度增强样式
+   通过 body class 控制各子样式开关
+   ========================================================= */
+
+/* ---------------------------------------------------------
+   1. 节点优先级左侧色带 (.style-priority-band)
+   5️⃣=最高=红色，1️⃣=最低=灰色
+   使用 inset box-shadow 避免与 border 冲突，视觉更明显
+   --------------------------------------------------------- */
+body.style-priority-band .mindmap-node.priority-5 {
+  box-shadow: inset 4px 0 0 0 #e04040 !important;
+}
+body.style-priority-band .mindmap-node.priority-4 {
+  box-shadow: inset 4px 0 0 0 #e07040 !important;
+}
+body.style-priority-band .mindmap-node.priority-3 {
+  box-shadow: inset 4px 0 0 0 #e0c040 !important;
+}
+body.style-priority-band .mindmap-node.priority-2 {
+  box-shadow: inset 4px 0 0 0 #40c040 !important;
+}
+body.style-priority-band .mindmap-node.priority-1 {
+  box-shadow: inset 4px 0 0 0 #808080 !important;
+}
+
+/* ---------------------------------------------------------
+   2. 节点底部状态色带 (.style-status-band)
+   --------------------------------------------------------- */
+body.style-status-band .mindmap-node[data-status="N"] {
+  border-bottom: 2px solid #40a0e0 !important;
+}
+body.style-status-band .mindmap-node[data-status="O"] {
+  border-bottom: 2px solid #e0a040 !important;
+}
+body.style-status-band .mindmap-node[data-status="D"] {
+  border-bottom: 2px solid #40c040 !important;
+}
+body.style-status-band .mindmap-node[data-status="U"] {
+  border-bottom: 2px solid #a040e0 !important;
+}
+body.style-status-band .mindmap-node[data-status="C"] {
+  border-bottom: 2px solid #808080 !important;
+}
+
+/* ---------------------------------------------------------
+   3. Mainline 🔴 选中文字变红（常驻功能，不再通过开关控制）
+   使用 .red-border 类匹配，避免 emoji 编码问题
+   --------------------------------------------------------- */
+.mindmap-node.red-border .node-name-area {
+  color: #e04040 !important;
+}
+.mindmap-node.red-border .node-name-area .node-seq {
+  color: #e04040 !important;
+}
+
+/* ---------------------------------------------------------
+   4. 连线样式区分（常驻功能，不再通过开关控制）
+   --------------------------------------------------------- */
+path.mainline-path {
+  stroke-width: 2.5px !important;
+}
+path.normal-path {
+  stroke-width: 1px !important;
+}
+
+/* 连线平滑过渡 */
+.connections-svg path {
+  transition: d 0.2s ease, stroke-width 0.2s ease, stroke 0.2s ease;
+}
+
+/* ---------------------------------------------------------
+   5. 画布网格背景 (.style-grid-bg)
+   提高透明度确保在深色背景上可见
+   --------------------------------------------------------- */
+body.style-grid-bg .mindmap-canvas {
+  background-image:
+    linear-gradient(rgba(255,255,255,0.15) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.15) 1px, transparent 1px) !important;
+  background-size: 40px 40px !important;
+  background-position: 0 0 !important;
+}
+
+/* ---------------------------------------------------------
+   6. 选中节点发光效果（常驻功能，不再通过开关控制）
+   --------------------------------------------------------- */
+.mindmap-node.selected {
+  box-shadow:
+    0 0 0 2px #e04040,
+    0 0 12px rgba(224, 64, 64, 0.35) !important;
+}
+
+/* ---------------------------------------------------------
+   7. 折叠指示器增强（始终启用，与主题配合）
+   --------------------------------------------------------- */
+.collapse-indicator {
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.15) !important;
+  transition: transform 0.2s ease, background-color 0.2s ease !important;
+}
+.collapse-indicator:hover {
+  transform: translateY(-50%) scale(1.15) !important;
+  background-color: #505050 !important;
+}

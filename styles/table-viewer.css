@@ -1,0 +1,351 @@
+/* Table视图面板样式 - 使用iframe加载独立页面 */
+
+/* 面板容器 */
+.table-view-panel {
+  position: fixed;
+  top: 0;
+  left: 36px; /* 工具栏宽度（无间隙） */
+  right: 200px; /* 右侧节点信息栏宽度 */
+  bottom: 0;
+  background: #1e1e1e;
+  z-index: 1000; /* 最高层级，覆盖所有元素 */
+  transform: translateX(-100%);
+  transition: transform 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.table-view-panel-open {
+  transform: translateX(0);
+}
+
+/* iframe样式 */
+.table-view-panel iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: #1e1e1e;
+}
+
+/* 工具栏 */
+.table-view-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: #2d2d2d;
+  border-bottom: 1px solid #3a3a3a;
+  flex-shrink: 0;
+}
+
+.table-view-toolbar-left,
+.table-view-toolbar-right {
+  display: flex;
+  gap: 8px;
+}
+
+.table-toolbar-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  background: #3a3a3a;
+  border: 1px solid #4a4a4a;
+  border-radius: 4px;
+  color: #ccc;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.table-toolbar-btn:hover {
+  background: #4a4a4a;
+  border-color: #5a5a5a;
+  color: #fff;
+}
+
+.table-toolbar-btn img {
+  width: 16px;
+  height: 16px;
+}
+
+.table-temp-save-btn {
+  background: #2a4a2a;
+  border-color: #3a6a3a;
+}
+
+.table-temp-save-btn:hover {
+  background: #3a6a3a;
+  border-color: #4a8a4a;
+}
+
+/* 表格容器 */
+.table-view-container {
+  flex: 1;
+  overflow: hidden;
+  padding: 8px;
+}
+
+/* Tabulator自定义样式 */
+.table-view-container .tabulator {
+  background: #252525;
+  border: 1px solid #3a3a3a;
+  border-radius: 4px;
+}
+
+.table-view-container .tabulator-header {
+  background: #2d2d2d;
+  border-bottom: 1px solid #3a3a3a;
+}
+
+.table-view-container .tabulator-header .tabulator-col {
+  background: #2d2d2d;
+  border-right: 1px solid #3a3a3a;
+}
+
+.table-view-container .tabulator-header .tabulator-col-title {
+  color: #b8b8ff;
+  font-weight: 500;
+}
+
+.table-view-container .tabulator-row {
+  background: #1e1e1e;
+  border-bottom: 1px solid #2a2a2a;
+}
+
+.table-view-container .tabulator-row:hover {
+  background: #252525;
+}
+
+.table-view-container .tabulator-row.tabulator-row-even {
+  background: #222222;
+}
+
+.table-view-container .tabulator-row.tabulator-row-even:hover {
+  background: #282828;
+}
+
+.table-view-container .tabulator-cell {
+  color: #d4d4d4;
+  border-right: 1px solid #2a2a2a;
+  padding: 4px 8px;
+}
+
+/* 只读单元格样式 */
+.table-view-container .tabulator-cell.readonly-cell {
+  background: #1a1a1a;
+  color: #666;
+  cursor: default;
+}
+
+/* 选中行样式 */
+.table-view-container .tabulator-row.tabulator-selected {
+  background: #2a3a4a !important;
+}
+
+/* 编辑输入框样式 */
+.table-view-container .tabulator-editing input {
+  background: #2d2d2d;
+  border: 1px solid #5a8aff;
+  color: #fff;
+  padding: 2px 4px;
+}
+
+/* 筛选头部样式 */
+.table-view-container .tabulator-header-filter input {
+  background: #1e1e1e;
+  border: 1px solid #3a3a3a;
+  color: #d4d4d4;
+  padding: 2px 4px;
+  border-radius: 2px;
+}
+
+.table-view-container .tabulator-header-filter input:focus {
+  border-color: #5a8aff;
+  outline: none;
+}
+
+/* 分页样式 */
+.table-view-container .tabulator-footer {
+  background: #2d2d2d;
+  border-top: 1px solid #3a3a3a;
+}
+
+.table-view-container .tabulator-paginator {
+  color: #d4d4d4;
+}
+
+.table-view-container .tabulator-page {
+  background: #3a3a3a;
+  border: 1px solid #4a4a4a;
+  color: #ccc;
+  margin: 0 2px;
+  padding: 2px 8px;
+  border-radius: 2px;
+}
+
+.table-view-container .tabulator-page:hover {
+  background: #4a4a4a;
+}
+
+.table-view-container .tabulator-page.active {
+  background: #5a8aff;
+  border-color: #5a8aff;
+  color: #fff;
+}
+
+/* Prompt弹窗面板 */
+.prompt-panel {
+  position: fixed;
+  top: 0;
+  left: 36px;
+  right: 200px;
+  bottom: 0;
+  background: #1e1e1e;
+  z-index: 1000;
+  transform: translateX(-100%);
+  transition: transform 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.prompt-panel-open {
+  transform: translateX(0);
+}
+
+/* Prompt面板随信息栏折叠展开自适应 */
+.prompt-panel.fullwidth {
+  right: 0 !important;
+}
+
+/* 右下角浮动信息栏切换按钮 */
+.panel-toggle-float {
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  width: 26px;
+  height: 26px;
+  background: var(--bg-module);
+  border: 1px solid var(--border-separator);
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1001;
+  user-select: none;
+}
+.panel-toggle-float:hover { background: #505050; }
+.panel-toggle-float img { width: 14px; height: 14px; }
+
+/* Prompt工具栏 */
+.prompt-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 3px 8px;
+  background: #2d2d2d;
+  border-bottom: 1px solid #3a3a3a;
+  flex-shrink: 0;
+}
+
+/* Prompt选项卡容器 */
+.prompt-tabs {
+  display: flex;
+  gap: 2px;
+  align-items: center;
+}
+
+/* Prompt单个选项卡 - 紧凑型 */
+.prompt-tab {
+  width: 90px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #3a3a3a;
+  border: 1px solid #4a4a4a;
+  border-radius: 3px 3px 0 0;
+  color: #999;
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  position: relative;
+}
+
+.prompt-tab:hover {
+  background: #4a4a4a;
+  color: #ccc;
+}
+
+.prompt-tab.active {
+  background: #1e1e1e;
+  border-bottom-color: #1e1e1e;
+  color: #fff;
+}
+
+.prompt-tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 4px;
+  right: 4px;
+  height: 2px;
+  background: #5a8aff;
+  border-radius: 1px;
+}
+
+/* Prompt关闭按钮 */
+.prompt-close-btn {
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #3a3a3a;
+  border: 1px solid #4a4a4a;
+  border-radius: 3px;
+  color: #999;
+  font-size: 10px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+  line-height: 1;
+}
+
+.prompt-close-btn:hover {
+  background: #e04040;
+  border-color: #e04040;
+  color: #fff;
+}
+
+/* Prompt内容区域 */
+.prompt-content {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Prompt单个选项卡面板 */
+.prompt-tab-panel {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: none;
+  padding: 12px;
+  overflow: auto;
+  color: #cccccc;
+  font-size: 48px;
+  font-weight: bold;
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+
+.prompt-tab-panel.active {
+  display: flex;
+}

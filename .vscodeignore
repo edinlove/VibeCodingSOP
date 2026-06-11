@@ -1,0 +1,33 @@
+# 版本控制
+.git/**
+.gitignore
+
+# 包管理缓存
+pnpm-lock.yaml
+node_modules/**
+
+# 开发文档（非运行时必需）
+AGENTS.md
+DESIGN.md
+assets/Optimization-Tab-Requirement.md
+assets/阶段7的计划.md
+
+# 示例与测试数据
+assets/参考项目*
+prompt/.historylog/**
+
+# 运行时数据（用户数据，不应打包）
+todo/**
+data/**
+
+# 备份文件（自动生成的历史文件）
+assets/*_20*.png
+assets/*_20*.jpg
+assets/*_20*.json
+assets/*_20*.md
+
+# Obsidian 插件开发文件（不属于 VS Code 插件）
+obsidian/**
+obsidian-dist/**
+scripts/**
+docs/**

@@ -1,0 +1,109 @@
+{
+  "version": "1.0.1",
+  
+  "excluded_patterns": [
+      ".git",
+      ".gitignore",
+      "node_modules",
+      "js",
+      ".DS_Store",
+      "assets",
+      "styles",
+      ".coze",
+      "*.yaml"
+  ],
+
+  "AIAutomaticallySelectsFiles": [
+      "AGENTS.md"
+  ],
+
+	"promptTemplateType": [{
+			"id": "FormattedOutput",
+			"order": 1,
+            "promptTemplateTypeName": "格式化输出"
+		},
+		{
+			"id": "Requirement",
+			"order": 2,
+            "promptTemplateTypeName": "需求分析"
+		},
+		{
+			"id": "FeatureDesign",
+			"order": 3,
+            "promptTemplateTypeName": "功能设计"
+		},
+		{
+			"id": "Architecture",
+			"order": 4,
+            "promptTemplateTypeName": "架构设计"
+		},
+		{
+			"id": "Development",
+			"order": 5,
+            "promptTemplateTypeName": "开发实施"
+		},
+		{
+			"id": "Bugfix",
+			"order": 6,
+            "promptTemplateTypeName": "缺陷修复"
+		},
+		{
+			"id": "Refactoring",
+			"order": 7,
+            "promptTemplateTypeName": "系统重构"
+		},
+		{
+			"id": "CodeReview",
+			"order": 8,
+            "promptTemplateTypeName": "代码评审"
+		},
+		{
+			"id": "Testing",
+			"order": 9,
+            "promptTemplateTypeName": "测试验证"
+		},
+		{
+			"id": "Security",
+			"order": 10,
+            "promptTemplateTypeName": "安全加固"
+		},
+		{
+			"id": "DevOps",
+			"order": 11,
+            "promptTemplateTypeName": "DevOps"
+		},
+		{
+			"id": "Documentation",
+			"order": 12,
+            "promptTemplateTypeName": "文档编写"
+		},
+		{
+			"id": "PromptStudio",
+			"order": 13,
+            "promptTemplateTypeName": "PromptStudio"
+		}
+	],
+
+	"promptTemplateTags": [{
+			"id": "常用",
+			"order": 1,
+            "promptTemplateTagName": "常用"
+		},
+		{
+			"id": "VC",
+			"order": 2,
+            "promptTemplateTagName": "VC"
+		},
+		{
+			"id": "WM",
+			"order": 3,
+            "promptTemplateTagName": "WM"
+		},
+		{
+			"id": "电商",
+			"order": 4,
+            "promptTemplateTagName": "电商"
+            
+		}
+	]
+}

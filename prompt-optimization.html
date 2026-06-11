@@ -1,0 +1,1295 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Optimization</title>
+  <link rel="stylesheet" href="styles/prompt-optimization.css?v=2">
+</head>
+<body>
+  <div class="opt-container">
+    <!-- 元数据整合区 -->
+    <div class="opt-section" id="metadataSection">
+      <div class="opt-section-header">
+        <span class="opt-section-title">元数据整合</span>
+        <div class="opt-header-actions">
+          <button class="opt-icon-btn" id="refreshMetadataBtn" title="刷新选中节点信息">
+            <img src="./assets/icon-refresh.png" alt="刷新">
+          </button>
+          <button class="opt-icon-btn" id="exportMetadataBtn" title="导出元数据整合内容">
+            <img src="assets/icon-table-export.png" alt="导出">
+          </button>
+        </div>
+      </div>
+      <div class="opt-section-body" id="metadataBody">
+        <div class="opt-placeholder">等待接收选中节点数据...</div>
+      </div>
+    </div>
+
+    <!-- 下半部分：工作目录 + 模板配置 -->
+    <div class="opt-bottom-row">
+      <!-- 工作目录配置区 -->
+      <div class="opt-section opt-half" id="workspaceSection">
+        <div class="opt-section-header">
+          <span class="opt-section-title">工作目录（可读写）配置</span>
+          <div class="opt-header-actions">
+            <button class="opt-icon-btn" id="exportWorkspaceBtn" title="导出工作目录整合内容">
+              <img src="assets/icon-table-export.png" alt="导出">
+            </button>
+            <button class="opt-icon-btn" id="configWorkspaceBtn" title="配置工作目录整合内容">
+              <img src="assets/icon_setting-config.png" alt="配置">
+            </button>
+          </div>
+        </div>
+        <div class="opt-section-body" id="workspaceBody">
+          <div class="opt-quick-actions" id="workspaceQuickActions">
+            <label class="opt-quick-label"><input type="checkbox" id="checkAllFiles"> 全选</label>
+            <label class="opt-quick-label"><input type="checkbox" id="uncheckAllFiles"> 全不选</label>
+            <label class="opt-quick-label"><input type="checkbox" id="aiSelectFiles"> AI智选</label>
+          </div>
+          <div class="opt-file-tree" id="workspaceFileTree">加载中...</div>
+          <!-- 工作目录整合内容 -->
+          <div class="opt-integration-label">工作目录整合内容</div>
+          <textarea class="opt-integration-textarea" id="workspaceIntegration" readonly></textarea>
+        </div>
+      </div>
+
+      <!-- 模板配置区 -->
+      <div class="opt-section opt-half" id="templateSection">
+        <div class="opt-section-header">
+          <span class="opt-section-title">模板配置</span>
+          <button class="opt-icon-btn" id="exportTemplateBtn" title="导出模板配置整合内容">
+            <img src="assets/icon-table-export.png" alt="导出">
+          </button>
+        </div>
+        <div class="opt-section-body opt-template-body" id="templateBody">
+          <!-- 模板配置选择区（占满剩余空间） -->
+          <div class="opt-template-list-section">
+            <div class="opt-template-list-header">
+              <span class="opt-template-col" style="width:22%">模板名称</span>
+              <span class="opt-template-col" style="width:16%">模板类型</span>
+              <span class="opt-template-col" style="width:14%">模板标签</span>
+              <span class="opt-template-col" style="width:12%">作用域</span>
+              <span class="opt-template-col" style="width:14%">模板ID</span>
+              <span class="opt-template-col" style="width:14%">版本号</span>
+              <span class="opt-template-col" style="width:8%"></span>
+            </div>
+            <div class="opt-template-list-body" id="templateListBody"></div>
+          </div>
+          <!-- 常用模板配置区（倒数第二） -->
+          <div class="opt-favorite-section" id="favoriteSection">
+            <div class="opt-favorite-label">常用模板</div>
+            <div class="opt-favorite-list" id="favoriteList"></div>
+          </div>
+          <!-- 通用模板配置区（底部一行） -->
+          <div class="opt-generic-section">
+            <div class="opt-generic-row">
+              <span class="opt-generic-label-compact">类型</span>
+              <select class="opt-generic-select-compact" id="genericTypeSelect">
+                <option value="">-- --</option>
+              </select>
+              <span class="opt-generic-label-compact">Type名</span>
+              <select class="opt-generic-select-compact" id="genericNameByTypeSelect">
+                <option value="">-- --</option>
+              </select>
+              <span class="opt-generic-label-compact">标签</span>
+              <select class="opt-generic-select-compact" id="genericTagSelect">
+                <option value="">-- --</option>
+              </select>
+              <span class="opt-generic-label-compact">Tag名</span>
+              <select class="opt-generic-select-compact" id="genericNameByTagSelect">
+                <option value="">-- --</option>
+              </select>
+              <button class="opt-icon-btn" id="addTemplateBtn" title="添加模板到配置列表">
+                <img src="assets/icon-list-add.png" alt="添加">
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 底部按钮区 -->
+  <div class="opt-footer" id="optFooter">
+    <div class="opt-footer-left">
+      <span class="opt-stat">选中节点数：<b id="statSelectedNodes">0</b></span>
+      <span class="opt-stat">相关节点数：<b id="statRelatedNodes">0</b></span>
+      <span class="opt-stat">选中文件夹数：<b id="statFolders">0</b></span>
+      <span class="opt-stat">选中文件数：<b id="statFiles">0</b></span>
+      <span class="opt-stat">选中模板数：<b id="statTemplates">0</b></span>
+    </div>
+    <div class="opt-footer-right">
+      <button class="opt-btn opt-btn-secondary" id="cancelBtn">取消</button>
+      <button class="opt-btn opt-btn-primary" id="builderMdBtn">Builder-md</button>
+      <button class="opt-btn opt-btn-primary" id="builderJsonBtn">Builder-json</button>
+    </div>
+  </div>
+
+  <script>
+  (function() {
+    // ==================== 全局状态 ====================
+    var currentTree = null;          // 完整树结构
+    var selectedNodeIds = [];        // 选中节点ID列表
+    var selectedNodes = [];          // 选中节点对象列表（从树中提取）
+    var cardStates = {};             // 每个卡片的勾选状态 { nodeId: { ancestors: {id: bool}, descendants: {id: bool} } }
+    var integrationContent = '';     // 当前整合内容文本
+
+    // 模板配置区全局状态
+    var templateConfig = null;       // 模板配置（类型、标签）
+    var templateLibrary = [];        // 模板库数据
+    var selectedTemplates = [];      // 已添加到列表的模板对象数组
+    var templateContentCache = {};   // 模板文件内容缓存 {filePath: content}
+
+    // ==================== 工具函数 ====================
+    function showToast(msg) {
+      var el = document.getElementById('metadataToast');
+      if (!el) {
+        el = document.createElement('div');
+        el.id = 'metadataToast';
+        el.style.cssText = 'position:fixed;top:8px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:6px 16px;border-radius:4px;font-size:12px;z-index:9999;opacity:0;transition:opacity 0.3s;pointer-events:none;white-space:nowrap;';
+        document.body.appendChild(el);
+      }
+      el.textContent = msg;
+      el.style.opacity = '1';
+      setTimeout(function() { el.style.opacity = '0'; }, 2000);
+    }
+
+    // ==================== 消息接收 ====================
+    var previousSelectedIds = [];
+    window.addEventListener('message', function(e) {
+      if (e.data && e.data.type === 'SELECTED_NODES_DATA') {
+        var newIds = e.data.selectedIds || [];
+        var idsChanged = newIds.length !== previousSelectedIds.length ||
+                         newIds.some(function(id, i) { return id !== previousSelectedIds[i]; });
+        currentTree = e.data.tree;
+        selectedNodeIds = newIds;
+        console.log('[Optimization] Received tree + selectedIds:', selectedNodeIds);
+        initMetadataSection();
+        // 如果选中节点变化，自动刷新一次以获取最新节点信息
+        if (idsChanged && newIds.length > 0) {
+          previousSelectedIds = newIds.slice();
+          setTimeout(function() {
+            showToast('正在刷新节点信息...');
+            parent.postMessage({type: 'REQUEST_NODES'}, '*');
+          }, 300);
+        }
+      }
+    });
+
+    // ==================== 提示词内容提取 ====================
+    function extractPromptContent(meta) {
+      if (!meta) return '';
+      // 去掉 ``` 到 ``` 之间的 frontmatter
+      var content = meta.replace(/```[\s\S]*?```/g, '');
+      // 去掉所有空行
+      content = content.split('\n').filter(function(line) {
+        return line.trim() !== '';
+      }).join('\n');
+      return content.trim();
+    }
+
+    // ==================== 树操作工具函数 ====================
+    function findNodeInTree(root, id) {
+      if (root.id === id) return root;
+      if (root.children) {
+        for (var i = 0; i < root.children.length; i++) {
+          var found = findNodeInTree(root.children[i], id);
+          if (found) return found;
+        }
+      }
+      return null;
+    }
+
+    function getAncestors(targetId, root) {
+      var ancestors = [];
+      function dfs(node, path) {
+        if (node.id === targetId) {
+          ancestors = path.slice();
+          return true;
+        }
+        if (node.children) {
+          for (var i = 0; i < node.children.length; i++) {
+            path.push(node);
+            if (dfs(node.children[i], path)) return true;
+            path.pop();
+          }
+        }
+        return false;
+      }
+      dfs(root, []);
+      return ancestors;
+    }
+
+    function getDescendants(node) {
+      var descendants = [];
+      function dfs(n) {
+        if (n.children) {
+          n.children.forEach(function(child) {
+            descendants.push(child);
+            dfs(child);
+          });
+        }
+      }
+      dfs(node);
+      return descendants;
+    }
+
+    function getBranches(node) {
+      // 按子节点分组，每个子节点及其子孙算一个分支
+      var branches = [];
+      if (!node.children || node.children.length === 0) return branches;
+      node.children.forEach(function(child) {
+        var branchNodes = [child];
+        function collect(n) {
+          if (n.children) {
+            n.children.forEach(function(c) {
+              branchNodes.push(c);
+              collect(c);
+            });
+          }
+        }
+        collect(child);
+        branches.push({ rootChild: child, nodes: branchNodes });
+      });
+      return branches;
+    }
+
+    // ==================== 元数据整合算法 ====================
+    function collectRelevantNodeIds() {
+      var relevantIds = new Set();
+      selectedNodes.forEach(function(node) {
+        relevantIds.add(node.id);
+        // 祖宗节点
+        var ancestors = getAncestors(node.id, currentTree);
+        ancestors.forEach(function(a) { relevantIds.add(a.id); });
+        // 子孙节点
+        var descendants = getDescendants(node);
+        descendants.forEach(function(d) { relevantIds.add(d.id); });
+      });
+      return relevantIds;
+    }
+
+    function dfsSort(root, relevantIds) {
+      var result = [];
+      function dfs(node) {
+        if (relevantIds.has(node.id)) {
+          result.push(node);
+        }
+        if (node.children && node.children.length > 0) {
+          // Sort children by id numeric order to ensure elder sibling comes first
+          var sortedChildren = node.children.slice().sort(function(a, b) {
+            var aNum = parseInt((a.id || '').replace('n', ''), 10) || 0;
+            var bNum = parseInt((b.id || '').replace('n', ''), 10) || 0;
+            return aNum - bNum;
+          });
+          sortedChildren.forEach(dfs);
+        }
+      }
+      dfs(root);
+      return result;
+    }
+
+    // ==================== 元数据整合区渲染 ====================
+    function initMetadataSection() {
+      var body = document.getElementById('metadataBody');
+      if (!currentTree || selectedNodeIds.length === 0) {
+        body.innerHTML = '<div class="opt-placeholder">未收到选中节点数据</div>';
+        updateStatSelectedNodes(0);
+        updateStatRelatedNodes(0);
+        return;
+      }
+
+      // 从树中提取选中节点对象，按DFS先序排序
+      var allSelected = [];
+      selectedNodeIds.forEach(function(id) {
+        var n = findNodeInTree(currentTree, id);
+        if (n) allSelected.push(n);
+      });
+      // 按整树的DFS先序遍历顺序排序，确保兄节点排在弟节点前面
+      var sortedByDfs = dfsSort(currentTree, new Set(selectedNodeIds));
+      selectedNodes = sortedByDfs.filter(function(n) {
+        return selectedNodeIds.indexOf(n.id) >= 0;
+      });
+
+      // 初始化卡片状态
+      cardStates = {};
+      selectedNodes.forEach(function(node) {
+        var state = { ancestors: {}, descendants: {} };
+        var ancestors = getAncestors(node.id, currentTree);
+        // 祖宗节点：默认只勾选父节点（最后一个）
+        ancestors.forEach(function(a, idx) {
+          state.ancestors[a.id] = (idx === ancestors.length - 1);
+        });
+        // 子孙节点：默认勾选所有分支
+        var branches = getBranches(node);
+        branches.forEach(function(branch) {
+          branch.nodes.forEach(function(n) {
+            state.descendants[n.id] = true;
+          });
+        });
+        cardStates[node.id] = state;
+      });
+
+      renderMetadataCards();
+      updateIntegrationContent();
+      updateStatSelectedNodes(selectedNodes.length);
+      updateStatRelatedNodes();
+    }
+
+    function renderMetadataCards() {
+      var body = document.getElementById('metadataBody');
+      body.innerHTML = '';
+
+      selectedNodes.forEach(function(node, index) {
+        var card = createNodeCard(node, index);
+        body.appendChild(card);
+      });
+    }
+
+    function createNodeCard(node, index) {
+      var card = document.createElement('div');
+      card.className = 'meta-card';
+      card.dataset.nodeId = node.id;
+      if (index === 0) card.classList.add('expanded');
+
+      // 标题栏
+      var header = document.createElement('div');
+      header.className = 'meta-card-header';
+      var titleSpan = document.createElement('span');
+      titleSpan.className = 'meta-card-title';
+      titleSpan.textContent = escapeHtml(node.title || '未命名');
+      var toggleImg = document.createElement('img');
+      toggleImg.className = 'meta-card-toggle';
+      toggleImg.src = index === 0 ? './assets/icon-template-expand-up.png' : './assets/icon-template-expand-down.png';
+      toggleImg.alt = index === 0 ? '折叠' : '展开';
+      header.appendChild(titleSpan);
+      header.appendChild(toggleImg);
+      header.addEventListener('click', function() {
+        card.classList.toggle('expanded');
+        toggleImg.src = card.classList.contains('expanded') ? './assets/icon-template-expand-up.png' : './assets/icon-template-expand-down.png';
+        toggleImg.alt = card.classList.contains('expanded') ? '折叠' : '展开';
+      });
+      card.appendChild(header);
+
+      // 内容区
+      var content = document.createElement('div');
+      content.className = 'meta-card-content';
+
+      // 1. 提示词内容文本区
+      var promptSection = document.createElement('div');
+      promptSection.className = 'meta-prompt-section';
+      var promptTextarea = document.createElement('textarea');
+      promptTextarea.className = 'meta-prompt-textarea';
+      promptTextarea.readOnly = true;
+      promptTextarea.value = extractPromptContent(node.meta);
+      promptSection.appendChild(promptTextarea);
+      content.appendChild(promptSection);
+
+      // 2. 祖宗节点集
+      var ancestors = getAncestors(node.id, currentTree);
+      if (ancestors.length > 0) {
+        var ancestorSection = document.createElement('div');
+        ancestorSection.className = 'meta-ancestor-section';
+        var ancestorLabel = document.createElement('div');
+        ancestorLabel.className = 'meta-subtitle';
+        ancestorLabel.textContent = '祖宗节点元数据集';
+        ancestorSection.appendChild(ancestorLabel);
+
+        var ancestorList = document.createElement('div');
+        ancestorList.className = 'meta-check-list';
+        ancestors.forEach(function(a, idx) {
+          var isParent = (idx === ancestors.length - 1);
+          var row = createCheckboxRow(a.id, a.title || '未命名', 'ancestor', node.id, isParent);
+          ancestorList.appendChild(row);
+        });
+        ancestorSection.appendChild(ancestorList);
+        content.appendChild(ancestorSection);
+      }
+
+      // 3. 子孙节点集（按分支分组）
+      var branches = getBranches(node);
+      if (branches.length > 0) {
+        var descendantSection = document.createElement('div');
+        descendantSection.className = 'meta-descendant-section';
+        var descLabel = document.createElement('div');
+        descLabel.className = 'meta-subtitle';
+        descLabel.textContent = '子孙节点元数据集';
+        descendantSection.appendChild(descLabel);
+
+        branches.forEach(function(branch, bidx) {
+          var branchWrap = document.createElement('div');
+          branchWrap.className = 'meta-branch';
+          var branchTitle = document.createElement('div');
+          branchTitle.className = 'meta-branch-title';
+          branchTitle.textContent = '分支 ' + (bidx + 1) + '（' + (branch.rootChild.title || '未命名') + '）';
+          branchWrap.appendChild(branchTitle);
+
+          var branchList = document.createElement('div');
+          branchList.className = 'meta-check-list';
+          branch.nodes.forEach(function(n) {
+            var row = createCheckboxRow(n.id, n.title || '未命名', 'descendant', node.id, true);
+            branchList.appendChild(row);
+          });
+          branchWrap.appendChild(branchList);
+          descendantSection.appendChild(branchWrap);
+        });
+        content.appendChild(descendantSection);
+      }
+
+      card.appendChild(content);
+      return card;
+    }
+
+    function createCheckboxRow(targetId, targetText, type, cardNodeId, checked) {
+      var label = document.createElement('label');
+      label.className = 'meta-check-row';
+      var cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.checked = checked;
+      cb.dataset.targetId = targetId;
+      cb.dataset.type = type;
+      cb.dataset.cardNodeId = cardNodeId;
+      cb.addEventListener('change', function() {
+        if (!cardStates[cardNodeId]) return;
+        if (type === 'ancestor') {
+          cardStates[cardNodeId].ancestors[targetId] = cb.checked;
+        } else {
+          cardStates[cardNodeId].descendants[targetId] = cb.checked;
+        }
+        updateIntegrationContent();
+        updateStatRelatedNodes();
+      });
+      var span = document.createElement('span');
+      span.className = 'meta-check-label';
+      span.textContent = targetText + ' (' + targetId + ')';
+      label.appendChild(cb);
+      label.appendChild(span);
+      return label;
+    }
+
+    function updateIntegrationContent() {
+      if (!currentTree || selectedNodes.length === 0) {
+        integrationContent = '';
+        return;
+      }
+
+      var relevantIds = new Set();
+      // 始终包含选中节点
+      selectedNodes.forEach(function(n) { relevantIds.add(n.id); });
+      // 包含被勾选的祖宗和子孙节点
+      selectedNodes.forEach(function(node) {
+        var state = cardStates[node.id];
+        if (!state) return;
+        Object.keys(state.ancestors).forEach(function(id) {
+          if (state.ancestors[id]) relevantIds.add(id);
+        });
+        Object.keys(state.descendants).forEach(function(id) {
+          if (state.descendants[id]) relevantIds.add(id);
+        });
+      });
+
+      var sortedNodes = dfsSort(currentTree, relevantIds);
+      var lines = ['# Core Task Instructions'];
+      sortedNodes.forEach(function(node) {
+        var content = extractPromptContent(node.meta);
+        if (content) {
+          lines.push('');
+          lines.push(content);
+        }
+      });
+      integrationContent = lines.join('\n');
+    }
+
+    function escapeHtml(text) {
+      var div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // ==================== 导出功能 ====================
+    function exportMetadata() {
+      if (!integrationContent) {
+        alert('没有可导出的内容');
+        return;
+      }
+      var now = new Date();
+      var ts = now.getFullYear() +
+        String(now.getMonth() + 1).padStart(2, '0') +
+        String(now.getDate()).padStart(2, '0') +
+        String(now.getHours()).padStart(2, '0') +
+        String(now.getMinutes()).padStart(2, '0') +
+        String(now.getSeconds()).padStart(2, '0');
+      var filename = '元数据整合内容' + ts + '.md';
+      var blob = new Blob([integrationContent], { type: 'text/markdown' });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    document.getElementById('exportMetadataBtn').addEventListener('click', exportMetadata);
+
+    document.getElementById('refreshMetadataBtn').addEventListener('click', function() {
+      showToast('正在刷新节点信息...');
+      parent.postMessage({type: 'REQUEST_NODES'}, '*');
+    });
+
+    // ==================== 统计更新 ====================
+    function updateStatSelectedNodes(count) {
+      document.getElementById('statSelectedNodes').textContent = count;
+    }
+
+    function updateStatRelatedNodes() {
+      var count = 0;
+      selectedNodes.forEach(function(node) {
+        var state = cardStates[node.id];
+        if (!state) return;
+        Object.keys(state.ancestors).forEach(function(id) {
+          if (state.ancestors[id]) count++;
+        });
+        Object.keys(state.descendants).forEach(function(id) {
+          if (state.descendants[id]) count++;
+        });
+      });
+      document.getElementById('statRelatedNodes').textContent = count;
+    }
+
+    // ==================== 工作目录文件树（保留）====================
+    var fileTreeData = [];
+    var aiAutoSelectFiles = [];
+
+    function loadFileTree() {
+      fetch('/api/files/tree')
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          fileTreeData = Array.isArray(data) ? data : [];
+          renderFileTree(fileTreeData);
+          return fetch('/api/prompt/config');
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(config) {
+          if (config && config.AIAutomaticallySelectsFiles) {
+            aiAutoSelectFiles = config.AIAutomaticallySelectsFiles;
+          }
+        })
+        .catch(function(err) {
+          console.error('Load file tree failed:', err);
+          document.getElementById('workspaceFileTree').textContent = '加载失败: ' + err.message;
+        });
+    }
+
+    function renderFileTree(items, container, level) {
+      container = container || document.getElementById('workspaceFileTree');
+      level = level || 0;
+      if (!items || items.length === 0) return;
+      if (level === 0) container.innerHTML = '';
+
+      items.forEach(function(item) {
+        var row = document.createElement('div');
+        row.className = 'opt-file-tree-item' + (item.type === 'dir' ? ' folder' : '');
+        row.style.paddingLeft = (level * 12) + 'px';
+
+        var toggle = document.createElement('img');
+        toggle.className = 'opt-file-tree-toggle';
+        toggle.style.visibility = item.type === 'dir' ? 'visible' : 'hidden';
+        toggle.src = './assets/icon-folder-unfold.png';
+        toggle.alt = '展开';
+        toggle.addEventListener('click', function(e) {
+          e.stopPropagation();
+          var children = row.querySelector('.opt-file-tree-children');
+          if (children) {
+            children.classList.toggle('expanded');
+            row.classList.toggle('expanded');
+            toggle.src = row.classList.contains('expanded') ? './assets/icon-folder-fold.png' : './assets/icon-folder-unfold.png';
+            toggle.alt = row.classList.contains('expanded') ? '折叠' : '展开';
+          }
+        });
+
+        var checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.className = 'opt-file-tree-checkbox';
+        checkbox.dataset.path = item.path;
+        checkbox.dataset.type = item.type;
+        checkbox.addEventListener('change', function() {
+          if (item.type === 'dir') {
+            var childrenWrap = row.querySelector('.opt-file-tree-children');
+            if (childrenWrap) {
+              childrenWrap.querySelectorAll('.opt-file-tree-checkbox').forEach(function(cb) {
+                cb.checked = checkbox.checked;
+              });
+            }
+          }
+          updateWorkspaceStats();
+        });
+
+        var icon = document.createElement('img');
+        icon.className = 'opt-file-tree-icon';
+        icon.src = item.type === 'dir' ? './assets/icon-folder.png' : './assets/icon-file.png';
+        icon.alt = item.type === 'dir' ? '文件夹' : '文件';
+
+        var name = document.createElement('span');
+        name.className = 'opt-file-tree-name';
+        name.textContent = item.name;
+        name.title = item.path;
+
+        row.appendChild(toggle);
+        row.appendChild(checkbox);
+        row.appendChild(icon);
+        row.appendChild(name);
+        container.appendChild(row);
+
+        if (item.type === 'dir' && item.children && item.children.length > 0) {
+          var childrenWrap = document.createElement('div');
+          childrenWrap.className = 'opt-file-tree-children';
+          renderFileTree(item.children, childrenWrap, level + 1);
+          row.appendChild(childrenWrap);
+        }
+      });
+    }
+
+    function getAllCheckboxes() {
+      return document.querySelectorAll('#workspaceFileTree .opt-file-tree-checkbox');
+    }
+
+    function updateWorkspaceStats() {
+      var checked = Array.from(getAllCheckboxes()).filter(function(cb) { return cb.checked; });
+      var folders = checked.filter(function(cb) { return cb.dataset.type === 'dir'; });
+      var files = checked.filter(function(cb) { return cb.dataset.type === 'file'; });
+      document.getElementById('statFolders').textContent = folders.length;
+      document.getElementById('statFiles').textContent = files.length;
+      updateWorkspaceIntegration();
+    }
+
+    function updateWorkspaceIntegration() {
+      var checked = Array.from(getAllCheckboxes()).filter(function(cb) { return cb.checked; });
+      var lines = ['# 工作目录文件清单'];
+      if (checked.length === 0) {
+        lines.push('');
+        lines.push('（未勾选任何文件或文件夹）');
+      } else {
+        checked.forEach(function(cb) {
+          lines.push('- ' + cb.dataset.path);
+        });
+      }
+      document.getElementById('workspaceIntegration').value = lines.join('\n');
+    }
+
+    function exportWorkspaceIntegration() {
+      var content = document.getElementById('workspaceIntegration').value;
+      if (!content || content.indexOf('（未勾选任何文件或文件夹）') !== -1) {
+        showToast('没有可导出的工作目录内容');
+        return;
+      }
+      var now = new Date();
+      var ts = now.getFullYear() +
+        String(now.getMonth() + 1).padStart(2, '0') +
+        String(now.getDate()).padStart(2, '0') +
+        String(now.getHours()).padStart(2, '0') +
+        String(now.getMinutes()).padStart(2, '0') +
+        String(now.getSeconds()).padStart(2, '0');
+      var filename = '工作目录整合内容' + ts + '.md';
+      var blob = new Blob([content], { type: 'text/markdown' });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('工作目录整合内容已导出');
+    }
+
+    // 快捷选项
+    document.getElementById('checkAllFiles').addEventListener('change', function() {
+      if (this.checked) {
+        getAllCheckboxes().forEach(function(cb) { cb.checked = true; });
+        document.getElementById('uncheckAllFiles').checked = false;
+        document.getElementById('aiSelectFiles').checked = false;
+      }
+      updateWorkspaceStats();
+    });
+
+    document.getElementById('uncheckAllFiles').addEventListener('change', function() {
+      if (this.checked) {
+        getAllCheckboxes().forEach(function(cb) { cb.checked = false; });
+        document.getElementById('checkAllFiles').checked = false;
+        document.getElementById('aiSelectFiles').checked = false;
+      }
+      updateWorkspaceStats();
+    });
+
+    document.getElementById('aiSelectFiles').addEventListener('change', function() {
+      if (this.checked) {
+        getAllCheckboxes().forEach(function(cb) { cb.checked = false; });
+        if (aiAutoSelectFiles.length > 0) {
+          getAllCheckboxes().forEach(function(cb) {
+            if (aiAutoSelectFiles.indexOf(cb.dataset.path) !== -1) {
+              cb.checked = true;
+            }
+          });
+        }
+        document.getElementById('checkAllFiles').checked = false;
+        document.getElementById('uncheckAllFiles').checked = false;
+      }
+      updateWorkspaceStats();
+    });
+
+    // ==================== 模板配置区 ====================
+
+    function loadTemplateData() {
+      Promise.all([
+        fetch('/api/prompt/config').then(function(r) { return r.json(); }),
+        fetch('/api/prompt/library').then(function(r) { return r.json(); })
+      ]).then(function(results) {
+        templateConfig = results[0];
+        var libData = results[1];
+        templateLibrary = (libData && libData.template) ? libData.template : [];
+        // 只保留启用的模板
+        templateLibrary = templateLibrary.filter(function(t) {
+          return t.promptTemplateEnabled !== false;
+        });
+        renderTemplateList();
+        renderFavoriteSection();
+        populateGenericSelects();
+      }).catch(function(err) {
+        console.error('Load template data failed:', err);
+        document.getElementById('templateListBody').innerHTML =
+          '<div class="opt-placeholder">加载模板数据失败: ' + err.message + '</div>';
+      });
+    }
+
+    function renderTemplateList() {
+      var container = document.getElementById('templateListBody');
+      if (!selectedTemplates || selectedTemplates.length === 0) {
+        container.innerHTML = '<div class="opt-placeholder" style="padding:6px 4px;font-size:11px;">未添加任何模板</div>';
+        updateStatTemplates(0);
+        return;
+      }
+      container.innerHTML = '';
+      selectedTemplates.forEach(function(t, index) {
+        var row = document.createElement('div');
+        row.className = 'opt-template-list-row';
+
+        var versionStr = '';
+        if (t.promptTemplateVersion) {
+          versionStr = t.promptTemplateVersion.major + '.' +
+                       t.promptTemplateVersion.minor + '.' +
+                       t.promptTemplateVersion.patch;
+        }
+        var typeName = getTypeName(t.promptTemplateType);
+        var tagName = (t.promptTemplateTags && t.promptTemplateTags.length > 0)
+          ? t.promptTemplateTags.join(', ') : '';
+
+        row.innerHTML =
+          '<span class="opt-template-col" style="width:22%" title="' + escapeHtml(t.promptTemplateTitle || '') + '">' + escapeHtml(t.promptTemplateTitle || '') + '</span>' +
+          '<span class="opt-template-col" style="width:16%">' + escapeHtml(typeName) + '</span>' +
+          '<span class="opt-template-col" style="width:14%" title="' + escapeHtml(tagName) + '">' + escapeHtml(tagName) + '</span>' +
+          '<span class="opt-template-col" style="width:12%">' + escapeHtml(t.promptTemplateScope || '') + '</span>' +
+          '<span class="opt-template-col" style="width:14%">' + escapeHtml(t.promptTemplateID || '') + '</span>' +
+          '<span class="opt-template-col" style="width:14%">' + escapeHtml(versionStr) + '</span>' +
+          '<span class="opt-template-col" style="width:8%"><div class="opt-template-actions">' +
+            '<button title="上移" data-action="up" data-index="' + index + '">▲</button>' +
+            '<button title="下移" data-action="down" data-index="' + index + '">▼</button>' +
+            '<button title="删除" data-action="del" data-index="' + index + '">×</button>' +
+          '</div></span>';
+        container.appendChild(row);
+      });
+
+      // 绑定按钮事件
+      container.querySelectorAll('.opt-template-actions button').forEach(function(btn) {
+        btn.addEventListener('click', function(e) {
+          e.stopPropagation();
+          var action = this.dataset.action;
+          var idx = parseInt(this.dataset.index, 10);
+          if (action === 'up') moveTemplateUp(idx);
+          else if (action === 'down') moveTemplateDown(idx);
+          else if (action === 'del') removeTemplate(idx);
+        });
+      });
+
+      updateStatTemplates(selectedTemplates.length);
+    }
+
+    function getTypeName(typeId) {
+      if (!templateConfig || !templateConfig.promptTemplateType) return typeId || '';
+      var found = templateConfig.promptTemplateType.find(function(t) {
+        return t.id === typeId;
+      });
+      return found ? found.promptTemplateTypeName : (typeId || '');
+    }
+
+    function getTagName(tagId) {
+      if (!templateConfig || !templateConfig.promptTemplateTags) return tagId || '';
+      var found = templateConfig.promptTemplateTags.find(function(t) {
+        return t.id === tagId;
+      });
+      return found ? found.promptTemplateTagName : (tagId || '');
+    }
+
+    function moveTemplateUp(index) {
+      if (index <= 0 || index >= selectedTemplates.length) return;
+      var temp = selectedTemplates[index];
+      selectedTemplates[index] = selectedTemplates[index - 1];
+      selectedTemplates[index - 1] = temp;
+      renderTemplateList();
+    }
+
+    function moveTemplateDown(index) {
+      if (index < 0 || index >= selectedTemplates.length - 1) return;
+      var temp = selectedTemplates[index];
+      selectedTemplates[index] = selectedTemplates[index + 1];
+      selectedTemplates[index + 1] = temp;
+      renderTemplateList();
+    }
+
+    function removeTemplate(index) {
+      if (index < 0 || index >= selectedTemplates.length) return;
+      var removed = selectedTemplates.splice(index, 1)[0];
+      renderTemplateList();
+      // 同步常用模板区的复选框状态
+      syncFavoriteCheckbox(removed.promptTemplateID, false);
+    }
+
+    function syncFavoriteCheckbox(templateId, checked) {
+      var cb = document.querySelector('.opt-favorite-item input[data-template-id="' + templateId + '"]');
+      if (cb) cb.checked = checked;
+    }
+
+    function renderFavoriteSection() {
+      var container = document.getElementById('favoriteList');
+      container.innerHTML = '';
+      var favorites = templateLibrary.filter(function(t) {
+        return t.promptTemplateFavorite === true;
+      });
+      if (favorites.length === 0) {
+        container.innerHTML = '<span class="opt-placeholder" style="font-size:11px;">无收藏模板</span>';
+        return;
+      }
+      favorites.forEach(function(t) {
+        var label = document.createElement('label');
+        label.className = 'opt-favorite-item';
+        var cb = document.createElement('input');
+        cb.type = 'checkbox';
+        cb.dataset.templateId = t.promptTemplateID;
+        // 检查是否已在selectedTemplates中
+        cb.checked = selectedTemplates.some(function(st) {
+          return st.promptTemplateID === t.promptTemplateID;
+        });
+        cb.addEventListener('change', function() {
+          onFavoriteChange(t, this.checked);
+        });
+        var span = document.createElement('span');
+        span.textContent = t.promptTemplateTitle || t.promptTemplateID;
+        label.appendChild(cb);
+        label.appendChild(span);
+        container.appendChild(label);
+      });
+    }
+
+    function onFavoriteChange(template, checked) {
+      if (checked) {
+        // 如果不在列表中，添加到末尾
+        var exists = selectedTemplates.some(function(st) {
+          return st.promptTemplateID === template.promptTemplateID;
+        });
+        if (!exists) {
+          selectedTemplates.push(template);
+        }
+      } else {
+        // 从列表中移除
+        selectedTemplates = selectedTemplates.filter(function(st) {
+          return st.promptTemplateID !== template.promptTemplateID;
+        });
+      }
+      renderTemplateList();
+    }
+
+    function populateGenericSelects() {
+      // 模板类型下拉
+      var typeSelect = document.getElementById('genericTypeSelect');
+      typeSelect.innerHTML = '<option value="">-- --</option>';
+      if (templateConfig && templateConfig.promptTemplateType) {
+        templateConfig.promptTemplateType.forEach(function(t) {
+          var opt = document.createElement('option');
+          opt.value = t.id;
+          opt.textContent = t.promptTemplateTypeName || t.id;
+          typeSelect.appendChild(opt);
+        });
+      }
+      typeSelect.addEventListener('change', onGenericTypeChange);
+
+      // 模板标签下拉
+      var tagSelect = document.getElementById('genericTagSelect');
+      tagSelect.innerHTML = '<option value="">-- --</option>';
+      if (templateConfig && templateConfig.promptTemplateTags) {
+        templateConfig.promptTemplateTags.forEach(function(t) {
+          var opt = document.createElement('option');
+          opt.value = t.id;
+          opt.textContent = t.promptTemplateTagName || t.id;
+          tagSelect.appendChild(opt);
+        });
+      }
+      tagSelect.addEventListener('change', onGenericTagChange);
+    }
+
+    function onGenericTypeChange() {
+      var typeId = document.getElementById('genericTypeSelect').value;
+      var nameSelect = document.getElementById('genericNameByTypeSelect');
+      nameSelect.innerHTML = '<option value="">-- --</option>';
+      if (!typeId) return;
+      var filtered = templateLibrary.filter(function(t) {
+        return t.promptTemplateType === typeId;
+      });
+      filtered.forEach(function(t) {
+        var opt = document.createElement('option');
+        opt.value = t.promptTemplateID;
+        opt.textContent = t.promptTemplateTitle || t.promptTemplateID;
+        nameSelect.appendChild(opt);
+      });
+    }
+
+    function onGenericTagChange() {
+      var tagId = document.getElementById('genericTagSelect').value;
+      var nameSelect = document.getElementById('genericNameByTagSelect');
+      nameSelect.innerHTML = '<option value="">-- --</option>';
+      if (!tagId) return;
+      var filtered = templateLibrary.filter(function(t) {
+        return t.promptTemplateTags && t.promptTemplateTags.indexOf(tagId) !== -1;
+      });
+      filtered.forEach(function(t) {
+        var opt = document.createElement('option');
+        opt.value = t.promptTemplateID;
+        opt.textContent = t.promptTemplateTitle || t.promptTemplateID;
+        nameSelect.appendChild(opt);
+      });
+    }
+
+    function addTemplateFromGeneric() {
+      var typeNameId = document.getElementById('genericNameByTypeSelect').value;
+      var tagNameId = document.getElementById('genericNameByTagSelect').value;
+      var addedCount = 0;
+
+      if (typeNameId) {
+        var t = templateLibrary.find(function(tpl) {
+          return tpl.promptTemplateID === typeNameId;
+        });
+        if (t) {
+          var exists = selectedTemplates.some(function(st) {
+            return st.promptTemplateID === t.promptTemplateID;
+          });
+          if (!exists) {
+            selectedTemplates.push(t);
+            addedCount++;
+            syncFavoriteCheckbox(t.promptTemplateID, true);
+          }
+        }
+      }
+
+      if (tagNameId) {
+        var t2 = templateLibrary.find(function(tpl) {
+          return tpl.promptTemplateID === tagNameId;
+        });
+        if (t2) {
+          var exists2 = selectedTemplates.some(function(st) {
+            return st.promptTemplateID === t2.promptTemplateID;
+          });
+          if (!exists2) {
+            selectedTemplates.push(t2);
+            addedCount++;
+            syncFavoriteCheckbox(t2.promptTemplateID, true);
+          }
+        }
+      }
+
+      if (addedCount > 0) {
+        renderTemplateList();
+        showToast('已添加 ' + addedCount + ' 个模板');
+      } else {
+        showToast('未选择新模板或已存在');
+      }
+    }
+
+    // ==================== 模板整合内容生成与导出 ====================
+    function generateTemplateIntegrationContent() {
+      if (!selectedTemplates || selectedTemplates.length === 0) return '';
+      var lines = ['# Common Implementation Specifications'];
+      selectedTemplates.forEach(function(t) {
+        lines.push('');
+        lines.push('## ' + (t.promptTemplateTitle || t.promptTemplateID));
+        var cached = templateContentCache[t.promptTemplateID];
+        if (cached !== undefined) {
+          lines.push(cached);
+        } else if (t.promptTemplateContent && t.promptTemplateContent.file) {
+          lines.push('（模板内容加载中...）');
+        } else {
+          lines.push('（无模板内容）');
+        }
+      });
+      return lines.join('\n');
+    }
+
+    function loadTemplateContents() {
+      // 异步加载所有选中模板的文件内容到缓存
+      var promises = selectedTemplates.map(function(t) {
+        if (!t.promptTemplateContent || !t.promptTemplateContent.file) {
+          templateContentCache[t.promptTemplateID] = '';
+          return Promise.resolve();
+        }
+        if (templateContentCache[t.promptTemplateID] !== undefined) {
+          return Promise.resolve();
+        }
+        var filePath = t.promptTemplateContent.file;
+        // 去掉开头的 ./
+        var apiPath = filePath.replace(/^\.\//, '');
+        return fetch('/api/prompt/template/' + encodeURIComponent(apiPath))
+          .then(function(r) { return r.text(); })
+          .then(function(text) {
+            templateContentCache[t.promptTemplateID] = text;
+          })
+          .catch(function(err) {
+            console.error('Load template content failed:', err);
+            templateContentCache[t.promptTemplateID] = '';
+          });
+      });
+      return Promise.all(promises);
+    }
+
+    function exportTemplateIntegration() {
+      if (!selectedTemplates || selectedTemplates.length === 0) {
+        showToast('没有可导出的模板');
+        return;
+      }
+      loadTemplateContents().then(function() {
+        var content = generateTemplateIntegrationContent();
+        var now = new Date();
+        var ts = now.getFullYear() +
+          String(now.getMonth() + 1).padStart(2, '0') +
+          String(now.getDate()).padStart(2, '0') +
+          String(now.getHours()).padStart(2, '0') +
+          String(now.getMinutes()).padStart(2, '0') +
+          String(now.getSeconds()).padStart(2, '0');
+        var filename = 'prompt-' + ts + '.md';
+        var blob = new Blob([content], { type: 'text/markdown' });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        a.click();
+        URL.revokeObjectURL(url);
+        showToast('模板配置整合内容已导出');
+      });
+    }
+
+    function updateStatTemplates(count) {
+      document.getElementById('statTemplates').textContent = count;
+    }
+
+    // ==================== Builder 功能 ====================
+    function getSelectedNodeUuidsInOrder() {
+      if (!currentTree || !selectedNodeIds || selectedNodeIds.length === 0) return [];
+      var result = [];
+      var idSet = new Set(selectedNodeIds);
+      function dfs(node) {
+        if (!node) return;
+        if (idSet.has(node.id) && node.uuid) {
+          result.push(node.uuid.slice(-8));
+        }
+        if (node.children) {
+          node.children.forEach(dfs);
+        }
+      }
+      dfs(currentTree);
+      return result;
+    }
+
+    function buildMdContent() {
+      var parts = [];
+      // 1. 模板配置整合内容
+      var templateContent = generateTemplateIntegrationContent();
+      if (templateContent) {
+        parts.push(templateContent);
+      }
+      // 2. 元数据整合内容
+      if (integrationContent) {
+        parts.push('# Core Task Instructions');
+        parts.push('');
+        parts.push(integrationContent);
+      }
+      // 3. 工作目录整合内容
+      var wsContent = document.getElementById('workspaceIntegration').value;
+      if (wsContent) {
+        parts.push('# Workspace & File Access Rules');
+        parts.push('');
+        parts.push('## Read & Write Files Included');
+        parts.push('');
+        parts.push(wsContent);
+      }
+      return parts.join('\n');
+    }
+
+    function markdownToJson(mdText) {
+      var lines = mdText.split('\n');
+      var root = {};
+      var stack = [{ obj: root, level: 0, key: null, content: [] }];
+      for (var i = 0; i < lines.length; i++) {
+        var line = lines[i];
+        var headingMatch = line.match(/^(#{1,6})\s+(.+)$/);
+        if (headingMatch) {
+          var level = headingMatch[1].length;
+          var title = headingMatch[2].trim();
+          // Flush content to previous node
+          if (stack[stack.length - 1].content.length > 0) {
+            var prev = stack[stack.length - 1];
+            var contentText = prev.content.join('\n').trim();
+            if (prev.key !== null) {
+              prev.obj[prev.key] = { content: contentText };
+            }
+            prev.content = [];
+          }
+          // Pop until parent level
+          while (stack.length > 1 && stack[stack.length - 1].level >= level) {
+            // Flush before pop
+            var popNode = stack[stack.length - 1];
+            if (popNode.content.length > 0 && popNode.key !== null) {
+              if (typeof popNode.obj[popNode.key] === 'object') {
+                popNode.obj[popNode.key].content = popNode.content.join('\n').trim();
+              } else {
+                popNode.obj[popNode.key] = { content: popNode.content.join('\n').trim() };
+              }
+            }
+            stack.pop();
+          }
+          var parent = stack[stack.length - 1];
+          var newObj = {};
+          if (parent.key !== null) {
+            if (!parent.obj[parent.key]) parent.obj[parent.key] = {};
+            parent.obj[parent.key][title] = newObj;
+            stack.push({ obj: parent.obj[parent.key], level: level, key: title, content: [] });
+          } else {
+            parent.obj[title] = newObj;
+            stack.push({ obj: parent.obj, level: level, key: title, content: [] });
+          }
+        } else {
+          stack[stack.length - 1].content.push(line);
+        }
+      }
+      // Flush remaining
+      while (stack.length > 1) {
+        var node = stack[stack.length - 1];
+        if (node.content.length > 0 && node.key !== null) {
+          if (typeof node.obj[node.key] === 'object') {
+            node.obj[node.key].content = node.content.join('\n').trim();
+          } else {
+            node.obj[node.key] = { content: node.content.join('\n').trim() };
+          }
+        }
+        stack.pop();
+      }
+      return root;
+    }
+
+    function saveToHistoryLog(fileName, content) {
+      return fetch('/api/prompt/historylog', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fileName: fileName, content: content })
+      }).then(function(r) {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json();
+      });
+    }
+
+    function sendUpdateJournal(fileName) {
+      parent.postMessage({
+        type: 'UPDATE_JOURNAL',
+        fileName: fileName,
+        filePath: '../prompt/.historylog/' + fileName,
+        selectedNodeIds: selectedNodeIds
+      }, '*');
+    }
+
+    function builderMd() {
+      loadTemplateContents().then(function() {
+        var content = buildMdContent();
+        if (!content || !content.trim()) {
+          showToast('没有可构建的内容');
+          return;
+        }
+        var now = new Date();
+        var ts = now.getFullYear() +
+          String(now.getMonth() + 1).padStart(2, '0') +
+          String(now.getDate()).padStart(2, '0') +
+          String(now.getHours()).padStart(2, '0') +
+          String(now.getMinutes()).padStart(2, '0') +
+          String(now.getSeconds()).padStart(2, '0');
+        var uuids = getSelectedNodeUuidsInOrder();
+        var uuidSuffix = uuids.length > 0 ? '-' + uuids.join('-') : '';
+        var fileName = 'prompt-' + ts + uuidSuffix + '.md';
+        saveToHistoryLog(fileName, content).then(function(res) {
+          showToast('Builder-md 保存成功：' + fileName);
+          sendUpdateJournal(fileName);
+        }).catch(function(err) {
+          showToast('Builder-md 保存失败：' + err.message);
+        });
+      });
+    }
+
+    function builderJson() {
+      loadTemplateContents().then(function() {
+        var mdContent = buildMdContent();
+        if (!mdContent || !mdContent.trim()) {
+          showToast('没有可构建的内容');
+          return;
+        }
+        var jsonContent = markdownToJson(mdContent);
+        var jsonStr = JSON.stringify(jsonContent, null, 2);
+        var now = new Date();
+        var ts = now.getFullYear() +
+          String(now.getMonth() + 1).padStart(2, '0') +
+          String(now.getDate()).padStart(2, '0') +
+          String(now.getHours()).padStart(2, '0') +
+          String(now.getMinutes()).padStart(2, '0') +
+          String(now.getSeconds()).padStart(2, '0');
+        var uuids = getSelectedNodeUuidsInOrder();
+        var uuidSuffix = uuids.length > 0 ? '-' + uuids.join('-') : '';
+        var fileName = 'prompt-' + ts + uuidSuffix + '.json';
+        saveToHistoryLog(fileName, jsonStr).then(function(res) {
+          showToast('Builder-json 保存成功：' + fileName);
+          sendUpdateJournal(fileName);
+        }).catch(function(err) {
+          showToast('Builder-json 保存失败：' + err.message);
+        });
+      });
+    }
+
+    // ==================== 底部按钮 ====================
+    document.getElementById('cancelBtn').addEventListener('click', function() {
+      window.parent.postMessage({ type: 'CLOSE_PROMPT_PANEL' }, '*');
+    });
+
+    document.getElementById('builderMdBtn').addEventListener('click', builderMd);
+
+    document.getElementById('builderJsonBtn').addEventListener('click', builderJson);
+
+    // 工作目录配置按钮
+    document.getElementById('configWorkspaceBtn').addEventListener('click', function() {
+      showToast('工作目录：' + (window.location.pathname || '/'));
+    });
+
+    // 工作目录导出按钮
+    document.getElementById('exportWorkspaceBtn').addEventListener('click', exportWorkspaceIntegration);
+
+    // 模板配置区事件
+    document.getElementById('exportTemplateBtn').addEventListener('click', exportTemplateIntegration);
+    document.getElementById('addTemplateBtn').addEventListener('click', addTemplateFromGeneric);
+
+    // ==================== 初始化 ====================
+    loadFileTree();
+    loadTemplateData();
+    parent.postMessage({type: 'REQUEST_NODES'}, '*');
+  })();
+  </script>
+</body>
+</html>
