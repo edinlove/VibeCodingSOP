@@ -3755,17 +3755,26 @@
 
   function copyToClipboard(text) {
     if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(text).catch(function(){});
+      navigator.clipboard.writeText(text).catch(function(){
+        fallbackCopy(text);
+      });
     } else {
-      var ta = document.createElement('textarea');
-      ta.value = text;
-      ta.style.position = 'fixed';
-      ta.style.opacity = '0';
-      document.body.appendChild(ta);
-      ta.select();
-      try { document.execCommand('copy'); } catch(e){}
-      document.body.removeChild(ta);
+      fallbackCopy(text);
     }
+  }
+
+  function fallbackCopy(text) {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.left = '-9999px';
+    ta.style.top = '0';
+    ta.setAttribute('readonly', '');
+    document.body.appendChild(ta);
+    ta.select();
+    ta.setSelectionRange(0, text.length);
+    try { document.execCommand('copy'); } catch(e){}
+    document.body.removeChild(ta);
   }
 
   // --- Table View Button ---
@@ -6080,20 +6089,13 @@
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(text).then(function() {
           showToastMsg('已复制到剪切板');
-        }).catch(function(err) {
-          showToastMsg('复制失败：' + err);
+        }).catch(function() {
+          fallbackCopy(text);
+          showToastMsg('已复制到剪切板');
         });
       } else {
-        // Fallback for older browsers
-        textarea.select();
-        textarea.setSelectionRange(0, 99999);
-        var success = document.execCommand('copy');
-        if (success) {
-          showToastMsg('已复制到剪切板');
-        } else {
-          showToastMsg('复制失败');
-        }
-        window.getSelection().removeAllRanges();
+        fallbackCopy(text);
+        showToastMsg('已复制到剪切板');
       }
     } catch(e) {
       showToastMsg('复制失败：' + e.message);

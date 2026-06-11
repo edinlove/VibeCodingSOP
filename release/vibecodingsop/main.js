@@ -44,6 +44,7 @@ class VibeCodingSOPView extends ItemView {
     const iframe = document.createElement('iframe');
     iframe.src = `http://localhost:${this.plugin.serverPort}`;
     iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-forms allow-popups allow-downloads');
+    iframe.setAttribute('allow', 'clipboard-write');
     container.appendChild(iframe);
   }
 
