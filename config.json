@@ -1,7 +1,0 @@
-{
-  "isProd": false,
-  "currentWorkDir": "/workspace/projects",
-  "localTodoDir": "/workspace/projects/todo",
-  "prodTodoDir": "/tmp/todo",
-  "debugLog": false
-}
