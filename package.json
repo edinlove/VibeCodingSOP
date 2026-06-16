@@ -1,0 +1,118 @@
+{
+  "name": "vibecodingsop",
+  "displayName": "VibeCodingSOP",
+  "description": "思维导图编辑器，支持Markdown导入导出、节点信息管理",
+  "version": "1.0.9",
+  "publisher": "EdPau",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/EdPau/VibeCodingSOP.git"
+  },
+  "icon": "assets/icon-logo.png",
+  "engines": {
+    "vscode": "^1.74.0"
+  },
+  "categories": [
+    "Other",
+    "Visualization"
+  ],
+  "keywords": [
+    "mindmap",
+    "markdown",
+    "思维导图"
+  ],
+  "activationEvents": [
+    "onView:vibecodingsop.sidebar",
+    "onCommand:md2mind.open"
+  ],
+  "main": "./extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "md2mind.open",
+        "title": "打开思维导图",
+        "category": "VibeCodingSOP",
+        "icon": "$(type-hierarchy)"
+      },
+      {
+        "command": "md2mind.selectWorkDir",
+        "title": "选择工作目录",
+        "category": "VibeCodingSOP"
+      },
+      {
+        "command": "md2mind.stopServer",
+        "title": "停止服务",
+        "category": "VibeCodingSOP"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "vibecodingsop",
+          "title": "VibeCodingSOP",
+          "icon": "assets/icon-logo.png"
+        }
+      ]
+    },
+    "views": {
+      "vibecodingsop": [
+        {
+          "type": "webview",
+          "id": "vibecodingsop.sidebar",
+          "name": "控制面板",
+          "contextualTitle": "VibeCodingSOP"
+        }
+      ]
+    },
+    "menus": {
+      "editor/title": [
+        {
+          "command": "md2mind.open",
+          "group": "navigation@1",
+          "when": "editorLangId == markdown"
+        }
+      ],
+      "explorer/context": [
+        {
+          "command": "md2mind.open",
+          "group": "2_workspace@5",
+          "when": "resourceExtname == .md"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "md2mind.open",
+          "when": "true"
+        },
+        {
+          "command": "md2mind.selectWorkDir",
+          "when": "true"
+        },
+        {
+          "command": "md2mind.stopServer",
+          "when": "false"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "VibeCodingSOP",
+      "properties": {
+        "md2mind.debugLog": {
+          "type": "boolean",
+          "default": false,
+          "description": "开启调试日志（重启 VS Code 后生效）"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "package": "vsce package",
+    "build:release": "node scripts/build-release.js",
+    "build:vscode": "node scripts/build-release.js --vscode-only",
+    "build:obsidian": "node scripts/build-release.js --obsidian-only"
+  },
+  "devDependencies": {
+    "@vscode/vsce": "^2.22.0"
+  }
+}
