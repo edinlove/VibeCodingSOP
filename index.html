@@ -777,6 +777,69 @@
   // --- Priority Default ---
   var DEFAULT_PRIORITY = '2️⃣';
 
+  function extractRequestFromNodeInfo(text) {
+    if (!text) return '';
+    var firstIdx = text.indexOf('```\n');
+    if (firstIdx === -1) firstIdx = text.indexOf('```');
+    if (firstIdx === -1) return text;
+    var afterStart = firstIdx + 3;
+    if (text.charCodeAt(afterStart) === 10) afterStart++;
+    var lines = text.substring(afterStart).split('\n');
+    var endLineIdx = -1;
+    for (var i = 0; i < lines.length; i++) {
+      if (lines[i].trim() === '```') {
+        endLineIdx = i;
+        break;
+      }
+    }
+    if (endLineIdx === -1) return text;
+    var reqLines = lines.slice(endLineIdx + 1);
+    var reqPart = reqLines.join('\n').replace(/^\n+/, '').replace(/\n+$/, '');
+    if (reqPart.endsWith('***')) reqPart = reqPart.slice(0, -3).replace(/\n+$/, '');
+    return reqPart;
+  }
+
+  function extractCodeBlockFromNodeInfo(text) {
+    if (!text) return null;
+    var firstIdx = text.indexOf('```\n');
+    if (firstIdx === -1) firstIdx = text.indexOf('```');
+    if (firstIdx === -1) return null;
+    var afterStart = firstIdx + 3;
+    if (text.charCodeAt(afterStart) === 10) afterStart++;
+    var lines = text.substring(afterStart).split('\n');
+    var codeLines = [];
+    for (var i = 0; i < lines.length; i++) {
+      if (lines[i].trim() === '```') {
+        return codeLines.join('\n');
+      }
+      codeLines.push(lines[i]);
+    }
+    return null;
+  }
+
+  function syncCodeBlockFieldsToNode(node, text) {
+    var reqPart = extractRequestFromNodeInfo(text);
+    node.request = reqPart;
+    var codeBlock = extractCodeBlockFromNodeInfo(text);
+    if (codeBlock) {
+      var codeLines = codeBlock.split('\n');
+      var cbTypeLabel = TYPE_LABELS[node.type] || 'requirement';
+      for (var k = 0; k < codeLines.length; k++) {
+        var ci = codeLines[k].indexOf('::');
+        if (ci === -1) continue;
+        var mkey = codeLines[k].substring(0, ci).trim();
+        var mval = codeLines[k].substring(ci + 2).trim();
+        if (mkey === cbTypeLabel + 'Status') node.status = STATUS_REVERSE[mval] || 'N';
+        else if (mkey === cbTypeLabel + 'Priority') { if (mval) node.priority = mval; }
+        else if (mkey === cbTypeLabel + 'Mainline') node.mainline = mval || '🟢';
+        else if (mkey === cbTypeLabel + 'Module') node.module = mval || '';
+        else if (mkey === cbTypeLabel + 'UUID') { if (mval) node.uuid = mval; }
+        else if (mkey === cbTypeLabel + 'AITaskJournal') node.aiTaskJournal = mval || '';
+      }
+    }
+    node.nodeInfo = text;
+  }
+
   function generateMetadata(node, level) {
     var typeLabel = TYPE_LABELS[node.type] || 'requirement';
     var statusLabel = STATUS_LABELS[node.status] || 'new';
@@ -1747,15 +1810,7 @@
     }
     // If temp-saved content exists, update request so exportMD includes it
     if (tempText !== null) {
-      var codeBlockMatch = metadataText.match(/^```[\s\S]*?^```/m);
-      if (codeBlockMatch) {
-        var reqPart = metadataText.substring(codeBlockMatch.index + codeBlockMatch[0].length)
-          .replace(/^\n+/, '').replace(/\n+$/, '');
-        node.request = reqPart;
-      } else {
-        node.request = metadataText;
-      }
-      node.nodeInfo = metadataText;
+      syncCodeBlockFieldsToNode(node, metadataText);
     }
 
     // Type
@@ -1781,6 +1836,9 @@
     // Journal
     var biJournal = document.getElementById('biJournal');
     if (biJournal) biJournal.textContent = node.journal ? node.journal.replace(/\[\[/g, '').replace(/\]\]/g, '') : '-';
+    // Sync to other textarea panels
+    if (typeof nodeInfoTextarea !== 'undefined' && nodeInfoTextarea) nodeInfoTextarea.value = metadataText;
+    if (typeof mdNodeTextarea !== 'undefined' && mdNodeTextarea) mdNodeTextarea.value = metadataText;
     panelSyncGuard = false;
   }
 
@@ -1832,42 +1890,17 @@
     var metaVal = document.getElementById('nodeTextarea').value;
     var generatedMeta = generateMetadata(node);
     if (metaVal !== generatedMeta) {
-      // User has edited the metadata — extract the request part
-      var codeBlockMatch = metaVal.match(/^```[\s\S]*?^```/m);
-      if (codeBlockMatch) {
-        // Extract request after the code block
-        var reqPart = metaVal.substring(codeBlockMatch.index + codeBlockMatch[0].length)
-          .replace(/^\n+/, '').replace(/\n+$/, '');
-        node.request = reqPart;
-        // Also try to parse metadata fields from the code block
-        var codeBlock = codeBlockMatch[0].replace(/^```\s*/, '').replace(/\s*```$/, '');
-        var codeLines = codeBlock.split('\n');
-        var typeLabel = TYPE_LABELS[node.type] || 'requirement';
-        for (var k = 0; k < codeLines.length; k++) {
-          var ci = codeLines[k].indexOf('::');
-          if (ci === -1) continue;
-          var key = codeLines[k].substring(0, ci).trim();
-          var val = codeLines[k].substring(ci + 2).trim();
-          if (key === typeLabel + 'Status') node.status = STATUS_REVERSE[val] || 'N';
-          else if (key === typeLabel + 'Priority') { if (val) node.priority = val; }
-          else if (key === typeLabel + 'Mainline') node.mainline = val || '🟢';
-          else if (key === typeLabel + 'Module') node.module = val || '';
-          else if (key === typeLabel + 'AITaskJournal') node.aiTaskJournal = val || '';
-        }
-      } else {
-        // No code block found — treat entire content as request
-        node.request = metaVal;
-      }
+      syncCodeBlockFieldsToNode(node, metaVal);
     }
 
     var ts = document.querySelector('#typeSelect .type-icon-item.selected');
-    if (ts && ts.getAttribute('data-value') !== node.type) node.type = ts.getAttribute('data-value');
+    if (ts && ts.getAttribute('data-value') !== node.type && lastInteractedSelector === 'typeSelect') node.type = ts.getAttribute('data-value');
     var ss = document.querySelector('#statusSelect .icon-item.selected');
-    if (ss && ss.getAttribute('data-value') !== node.status) node.status = ss.getAttribute('data-value');
+    if (ss && ss.getAttribute('data-value') !== node.status && lastInteractedSelector === 'statusSelect') node.status = ss.getAttribute('data-value');
     var ps = document.querySelector('#prioritySelect .icon-item.selected');
-    if (ps && ps.getAttribute('data-value') !== node.priority) node.priority = ps.getAttribute('data-value');
+    if (ps && ps.getAttribute('data-value') !== node.priority && lastInteractedSelector === 'prioritySelect') node.priority = ps.getAttribute('data-value');
     var ms = document.querySelector('#mainlineSelect .icon-item.selected');
-    if (ms && ms.getAttribute('data-value') !== node.mainline) node.mainline = ms.getAttribute('data-value');
+    if (ms && ms.getAttribute('data-value') !== node.mainline && lastInteractedSelector === 'mainlineSelect') node.mainline = ms.getAttribute('data-value');
 
     // Cascade inherit Priority/Module/Type to children
     cascadeInherit(node);
@@ -1900,48 +1933,60 @@
     if (!data) return;
     var node = findNode(data, nodeId);
     if (!node) return;
-    var typeLabel = TYPE_LABELS[node.type] || 'requirement';
-    var journalKey = typeLabel + 'AITaskJournal';
     var entry = '[[' + filePath + ']]';
-    var pathEntry = '[[' + filePath + ']]';
 
-    // 1. Update node.aiTaskJournal (for frontmatter generation)
+    // Step 1: Sync any unsaved UI edits to the node object FIRST
+    //         (before appending journal, so we don't overwrite the appended reference)
+    if (nodeId === selectedId) {
+      node.title = document.getElementById('titleInput').value;
+      node.module = document.getElementById('moduleInput').value;
+      node.created = document.getElementById('createdInput').value;
+      node.estDays = document.getElementById('estDaysSelect').value;
+      var metaVal = document.getElementById('nodeTextarea').value;
+      var generatedMeta = generateMetadata(node);
+      if (metaVal !== generatedMeta) {
+        syncCodeBlockFieldsToNode(node, metaVal);
+      }
+    }
+
+    // Step 2: Append journal reference to node.aiTaskJournal
     if (!node.aiTaskJournal) {
       node.aiTaskJournal = entry;
     } else if (node.aiTaskJournal.indexOf(entry) === -1) {
       node.aiTaskJournal += ',' + entry;
     }
 
-    // 2. Update node.journal (independent field for UI display)
+    // Step 3: Append journal reference to node.journal
     if (!node.journal) {
       node.journal = entry;
     } else if (node.journal.indexOf(entry) === -1) {
       node.journal += ',' + entry;
     }
 
-    // 3. Update node.request (append pathEntry before *** or at end)
+    // Step 4: Append journal reference to node.request (before *** or at end)
     var req = node.request || '';
-    if (req.indexOf(pathEntry) === -1) {
+    if (req.indexOf(entry) === -1) {
       var separatorIdx = req.indexOf('***');
       if (separatorIdx >= 0) {
         var before = req.substring(0, separatorIdx).replace(/\n+$/, '');
         var after = req.substring(separatorIdx);
-        req = before + '\n\n' + pathEntry + '\n\n' + after;
+        req = before + '\n\n' + entry + '\n\n' + after;
       } else {
-        req = req ? (req.replace(/\n+$/, '') + '\n\n' + pathEntry) : pathEntry;
+        req = req ? (req.replace(/\n+$/, '') + '\n\n' + entry) : entry;
       }
       node.request = req;
     }
 
-    // 4. Regenerate node.nodeInfo so frontmatter uses updated aiTaskJournal
+    // Step 5: Regenerate node.nodeInfo with all updates applied
     node.nodeInfo = generateMetadata(node);
 
-    // 5. Clear stale temp-save for this node so it won't override UI later
+    // Step 6: Update temp-save with the new nodeInfo so it stays consistent
     if (currentFileName) {
-      localStorage.removeItem('tempSave_nodeInfo_' + currentFileName + '_' + nodeId);
+      var tempKey = 'tempSave_nodeInfo_' + currentFileName + '_' + nodeId;
+      safeLocalStorageSet(tempKey, JSON.stringify({ text: node.nodeInfo, time: Date.now() }));
     }
 
-    // 6. Refresh UI
+    // Step 7: Refresh UI
     if (nodeId === selectedId) {
       syncPanelFromNode(true);
       updateBasicInfo();
@@ -2265,7 +2310,6 @@
           var typePrefix = metaMatch[1];
           var key = metaMatch[2];
           var val = metaMatch[3];
-          // Infer type from frontmatter prefix
           if (key === 'UUID') {
             currentNode.type = TYPE_REVERSE[typePrefix] || 'R';
           }
@@ -2291,14 +2335,50 @@
             case 'UUID':
               if (val) {
                 currentNode.uuid = val;
-                // If this UUID matches an existing node, preserve its runtime ID
                 if (uuidMap[val]) {
                   currentNode.id = uuidMap[val].id;
                   currentNode.created = uuidMap[val].created;
                 }
               }
               break;
-            // ID is auto-assigned, ignore
+          }
+        } else {
+          var fallbackMatch = line.match(/^(\S+?)(UUID|ID|Status|Priority|Mainline|Module|Created|EstDays|AITaskJournal)::(.*)$/);
+          if (fallbackMatch) {
+            var fKey = fallbackMatch[2];
+            var fVal = fallbackMatch[3];
+            switch (fKey) {
+              case 'Status':
+                currentNode.status = STATUS_REVERSE[fVal] || 'N';
+                break;
+              case 'Priority':
+                if (fVal) currentNode.priority = fVal;
+                break;
+              case 'Mainline':
+                currentNode.mainline = fVal || '🟢';
+                break;
+              case 'Module':
+                currentNode.module = fVal || '';
+                break;
+              case 'Created':
+                currentNode.created = fVal || '';
+                break;
+              case 'EstDays':
+                currentNode.estDays = fVal || '0';
+                break;
+              case 'UUID':
+                if (fVal) {
+                  currentNode.uuid = fVal;
+                  if (uuidMap[fVal]) {
+                    currentNode.id = uuidMap[fVal].id;
+                    currentNode.created = uuidMap[fVal].created;
+                  }
+                }
+                break;
+              case 'AITaskJournal':
+                if (fVal) currentNode.aiTaskJournal = fVal;
+                break;
+            }
           }
         }
       } else if (currentNode && !inCodeBlock) {
@@ -2518,7 +2598,9 @@
 	    var baseFileName = 'Paulo.md';
 	    findUniqueFileName(baseFileName, function(uniqueFileName) {
 	      var baseName = uniqueFileName.replace(/\.md$/i, '');
-	      var defaultContent = '# ' + baseName + '\n\n```' + baseName.toLowerCase() + 'ID::n1\n' + baseName.toLowerCase() + 'Priority::2️⃣\n' + baseName.toLowerCase() + 'Mainline::🟢\n' + baseName.toLowerCase() + 'Status::new\n' + baseName.toLowerCase() + 'Module::\n' + baseName.toLowerCase() + 'Created::' + now() + '\n' + baseName.toLowerCase() + 'EstDays::0\n```\n\n';
+	      var newUuid = generateUUID();
+	      var newNow = now();
+	      var defaultContent = '# ' + baseName + '\n\n```\nrequirementUUID::' + newUuid + '\nrequirementID::n1\nrequirementPriority::2️⃣\nrequirementMainline::🟢\nrequirementStatus::new\nrequirementModule::\nrequirementCreated::' + newNow + '\nrequirementEstDays::0\nrequirementAITaskJournal::\n```\n\n> goal & principle\n>\n> description\n>\n\n***\n';
 
 	      fetch('/api/todo/save', {
 	        method: 'POST',
@@ -4324,6 +4406,13 @@
   
   // 节点面板编辑/预览切换
   mdNodeTextarea.addEventListener('input', function() {
+    var node = getSelected();
+    if (node) {
+      var text = mdNodeTextarea.value;
+      syncCodeBlockFieldsToNode(node, text);
+      document.getElementById('nodeTextarea').value = text;
+      if (typeof nodeInfoTextarea !== 'undefined' && nodeInfoTextarea) nodeInfoTextarea.value = text;
+    }
     if (!mdNodeEditMode) {
       updateNodePreview();
     }
@@ -4789,19 +4878,8 @@
     var key = 'tempSave_nodeInfo_' + currentFileName + '_' + node.id;
     localStorage.setItem(key, JSON.stringify({ text: text, time: Date.now() }));
     
-    // Extract request from the metadata text
-    var codeBlockMatch = text.match(/^```[\s\S]*?^```/m);
-    if (codeBlockMatch) {
-      var reqPart = text.substring(codeBlockMatch.index + codeBlockMatch[0].length)
-        .replace(/^\n+/, '').replace(/\n+$/, '');
-      if (reqPart.endsWith('***')) reqPart = reqPart.slice(0, -3).replace(/\n+$/, '');
-      node.request = reqPart;
-    } else {
-      node.request = text;
-    }
-    node.nodeInfo = text;
+    syncCodeBlockFieldsToNode(node, text);
 
-    // 同步到节点信息栏的textarea
     document.getElementById('nodeTextarea').value = text;
     syncMdPanelFromCanvas();
     showToastMsg('已暂存节点信息全文');
@@ -4810,7 +4888,12 @@
   
   // 节点信息文本编辑时更新预览
   nodeInfoTextarea.addEventListener('input', function() {
-    // 编辑模式下不实时更新预览，切换到预览时更新
+    var node = getSelected();
+    if (!node) return;
+    var text = nodeInfoTextarea.value;
+    syncCodeBlockFieldsToNode(node, text);
+    document.getElementById('nodeTextarea').value = text;
+    if (typeof mdNodeTextarea !== 'undefined' && mdNodeTextarea) mdNodeTextarea.value = text;
   });
 
 
@@ -5934,7 +6017,7 @@
       nodeIds.forEach(function(nodeId) {
         updateNodeJournal(nodeId, fileName, filePath);
       });
-      showToastMsg('Journal 已更新：' + fileName);
+      showToastMsg('Journal 已更新：' + fileName + '，请点击保存按钮以持久化变更');
     } else if (event.data.type === 'REQUEST_NODES') {
       // iframe 加载完成后请求节点数据
       sendOptimizationNodeData();
@@ -6109,18 +6192,10 @@
         return;
       }
       
-      // Extract request from the metadata text
-      var codeBlockMatch = nodeModalText.match(/^```[\s\S]*?^```/m);
-      if (codeBlockMatch) {
-        var reqPart = nodeModalText.substring(codeBlockMatch.index + codeBlockMatch[0].length)
-          .replace(/^\n+/, '').replace(/\n+$/, '');
-        if (reqPart.endsWith('***')) reqPart = reqPart.slice(0, -3).replace(/\n+$/, '');
-        node.request = reqPart;
-      } else {
-        node.request = nodeModalText;
-      }
-      node.nodeInfo = nodeModalText;
+      syncCodeBlockFieldsToNode(node, nodeModalText);
       document.getElementById('nodeTextarea').value = nodeModalText;
+      if (typeof nodeInfoTextarea !== 'undefined' && nodeInfoTextarea) nodeInfoTextarea.value = nodeModalText;
+      if (typeof mdNodeTextarea !== 'undefined' && mdNodeTextarea) mdNodeTextarea.value = nodeModalText;
       syncMdPanelFromCanvas();
       showToastMsg('已暂存节点信息全文');
     } catch(e) {
@@ -6176,17 +6251,9 @@
         showToastMsg('暂存失败：' + result.error);
         return;
       }
-      // Extract request from the metadata text
-      var codeBlockMatch = text.match(/^```[\s\S]*?^```/m);
-      if (codeBlockMatch) {
-        var reqPart = text.substring(codeBlockMatch.index + codeBlockMatch[0].length)
-          .replace(/^\n+/, '').replace(/\n+$/, '');
-        if (reqPart.endsWith('***')) reqPart = reqPart.slice(0, -3).replace(/\n+$/, '');
-        node.request = reqPart;
-      } else {
-        node.request = text;
-      }
-      node.nodeInfo = text;
+      syncCodeBlockFieldsToNode(node, text);
+      if (typeof nodeInfoTextarea !== 'undefined' && nodeInfoTextarea) nodeInfoTextarea.value = text;
+      if (typeof mdNodeTextarea !== 'undefined' && mdNodeTextarea) mdNodeTextarea.value = text;
       syncMdPanelFromCanvas();
       showToastMsg('已暂存节点元数据');
     } catch(e) {
@@ -6326,33 +6393,7 @@
           try {
             var saved = JSON.parse(localStorage.getItem(key));
             var text = saved.text;
-            // Extract request from metadata text
-            var codeBlockMatch = text.match(/^```[\s\S]*?^```/m);
-            if (codeBlockMatch) {
-              var reqPart = text.substring(codeBlockMatch.index + codeBlockMatch[0].length)
-                .replace(/^\n+/, '').replace(/\n+$/, '');
-              if (reqPart.endsWith('***')) reqPart = reqPart.slice(0, -3).replace(/\n+$/, '');
-              node.request = reqPart;
-              // Also parse metadata fields from code block
-              var codeBlock = codeBlockMatch[0].replace(/^```\s*/, '').replace(/\s*```$/, '');
-              var codeLines = codeBlock.split('\n');
-              var typeLabel = TYPE_LABELS[node.type] || 'requirement';
-              for (var k = 0; k < codeLines.length; k++) {
-                var ci = codeLines[k].indexOf('::');
-                if (ci === -1) continue;
-                var mkey = codeLines[k].substring(0, ci).trim();
-                var mval = codeLines[k].substring(ci + 2).trim();
-                if (mkey === typeLabel + 'Status') node.status = STATUS_REVERSE[mval] || 'N';
-                else if (mkey === typeLabel + 'Priority') { if (mval) node.priority = mval; }
-                else if (mkey === typeLabel + 'Mainline') node.mainline = mval || '🟢';
-                else if (mkey === typeLabel + 'Module') node.module = mval || '';
-                else if (mkey === typeLabel + 'UUID') { if (mval) node.uuid = mval; }
-                else if (mkey === typeLabel + 'AITaskJournal') node.aiTaskJournal = mval || '';
-              }
-            } else {
-              node.request = text;
-            }
-            node.nodeInfo = text;
+            syncCodeBlockFieldsToNode(node, text);
           } catch(e) {}
         }
       }
