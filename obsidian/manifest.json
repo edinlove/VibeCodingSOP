@@ -1,7 +1,7 @@
 {
   "id": "vibecodingsop",
   "name": "VibeCodingSOP",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "minAppVersion": "0.15.0",
   "description": "思维导图编辑器，支持 Markdown 导入导出、节点元数据管理、Prompt 模板库",
   "author": "Ed",
