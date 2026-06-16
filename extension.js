@@ -175,6 +175,7 @@ class VibeCodingSOPSidebarProvider {
       switch (message.command) {
         case 'openEditor':
           await openEditorPanel(this.context);
+          this.refresh();
           break;
         case 'selectWorkDir':
           await handleSelectWorkDir(this.context);

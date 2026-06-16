@@ -1,4 +1,7 @@
-todo/.bak/
+todo/.bak/*
+prompt/.history/*
+release/*
+release/vibecodingsop/*
 node_modules
 dist
 .DS_Store
