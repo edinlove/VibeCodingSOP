@@ -840,6 +840,51 @@
     node.nodeInfo = text;
   }
 
+  var autoTempSaveTimer = null;
+  function scheduleAutoTempSave() {
+    if (autoTempSaveTimer) clearTimeout(autoTempSaveTimer);
+    autoTempSaveTimer = setTimeout(function() {
+      doAutoTempSave();
+    }, 300);
+  }
+
+  function doAutoTempSave() {
+    if (!currentFileName && data && data.title) {
+      currentFileName = data.title + '.md';
+      currentFileEnv = 'local';
+    }
+    if (!currentFileName || !data) return;
+    (function walk(node) {
+      if (!node) return;
+      var currentText = node.nodeInfo || generateMetadata(node);
+      var key = 'tempSave_nodeInfo_' + currentFileName + '_' + node.id;
+      safeLocalStorageSet(key, JSON.stringify({ text: currentText, time: Date.now() }));
+      (node.children || []).forEach(walk);
+    })(data);
+  }
+
+  function tempSaveAllNodes() {
+    if (!currentFileName && data && data.title) {
+      currentFileName = data.title + '.md';
+      currentFileEnv = 'local';
+    }
+    if (!currentFileName) {
+      showToastMsg('请先打开文件');
+      return 0;
+    }
+    if (!data) return 0;
+    var count = 0;
+    (function walk(node) {
+      if (!node) return;
+      var currentText = node.nodeInfo || generateMetadata(node);
+      var key = 'tempSave_nodeInfo_' + currentFileName + '_' + node.id;
+      var result = safeLocalStorageSet(key, JSON.stringify({ text: currentText, time: Date.now() }));
+      if (result.success) count++;
+      (node.children || []).forEach(walk);
+    })(data);
+    return count;
+  }
+
   function generateMetadata(node, level) {
     var typeLabel = TYPE_LABELS[node.type] || 'requirement';
     var statusLabel = STATUS_LABELS[node.status] || 'new';
@@ -1289,7 +1334,7 @@
   function updateSingleNode(nodeId) {
     var node = findNode(data, nodeId);
     if (!node) return;
-    node.nodeInfo = generateMetadata(node);
+    if (restoreTempSave(nodeId) === null) node.nodeInfo = generateMetadata(node);
     var oldEl = content.querySelector('[data-id="'+nodeId+'"]');
     if (oldEl) {
       var newEl = createNodeEl(node);
@@ -1835,7 +1880,7 @@
     else mr.classList.remove('mainline-red');
     // Journal
     var biJournal = document.getElementById('biJournal');
-    if (biJournal) biJournal.textContent = node.journal ? node.journal.replace(/\[\[/g, '').replace(/\]\]/g, '') : '-';
+    if (biJournal) biJournal.textContent = formatJournalDisplay(node.journal);
     // Sync to other textarea panels
     if (typeof nodeInfoTextarea !== 'undefined' && nodeInfoTextarea) nodeInfoTextarea.value = metadataText;
     if (typeof mdNodeTextarea !== 'undefined' && mdNodeTextarea) mdNodeTextarea.value = metadataText;
@@ -1905,6 +1950,8 @@
     // Cascade inherit Priority/Module/Type to children
     cascadeInherit(node);
 
+    scheduleAutoTempSave();
+
     fullRender();
   }
 
@@ -1926,14 +1973,19 @@
     document.getElementById('biExpand').textContent = (!node.children || node.children.length===0)?'false':(node.collapsed?'false':'true');
     document.getElementById('biSonsCount').textContent = node.children?node.children.length:0;
     var journalVal = node.journal || '';
-    document.getElementById('biJournal').textContent = journalVal ? journalVal.replace(/\[\[/g, '').replace(/\]\]/g, '') : '-';
+    document.getElementById('biJournal').textContent = formatJournalDisplay(journalVal);
+  }
+
+  function formatJournalDisplay(journalStr) {
+    if (!journalStr) return '-';
+    return journalStr.replace(/\[\[([^\]]*)\]\]/g, '$1').replace(/ *\| *\[打开文件\]\([^)]*\)/g, '');
   }
 
   function updateNodeJournal(nodeId, fileName, filePath) {
     if (!data) return;
     var node = findNode(data, nodeId);
     if (!node) return;
-    var entry = '[[' + filePath + ']]';
+    var entry = '[[' + fileName + ']] | [打开文件](' + filePath + ')';
 
     // Step 1: Sync any unsaved UI edits to the node object FIRST
     //         (before appending journal, so we don't overwrite the appended reference)
@@ -1991,7 +2043,7 @@
       syncPanelFromNode(true);
       updateBasicInfo();
     }
-    document.getElementById('biJournal').textContent = node.journal ? node.journal.replace(/\[\[/g, '').replace(/\]\]/g, '') : '-';
+    document.getElementById('biJournal').textContent = formatJournalDisplay(node.journal);
     updateNodeInfoPanelContent();
     syncMdPanelFromCanvas();
   }
@@ -2394,6 +2446,11 @@
       node.children.forEach(function(child) { updateNodeInfo(child, level + 1); });
     }
     if (root) updateNodeInfo(root, 0);
+
+    (function restoreJournal(n) {
+      if (n.aiTaskJournal && !n.journal) n.journal = n.aiTaskJournal;
+      (n.children || []).forEach(restoreJournal);
+    })(root);
 
     return root || createNode('根节点');
   }
@@ -2807,6 +2864,7 @@
 	      return;
 	    }
 	    try {
+	      applyAllTempSaves();
 	      var text = exportMD();
 	      if (!text || text.trim() === '') {
 	        showToastMsg('导出内容为空，保存取消');
@@ -4412,6 +4470,7 @@
       syncCodeBlockFieldsToNode(node, text);
       document.getElementById('nodeTextarea').value = text;
       if (typeof nodeInfoTextarea !== 'undefined' && nodeInfoTextarea) nodeInfoTextarea.value = text;
+      scheduleAutoTempSave();
     }
     if (!mdNodeEditMode) {
       updateNodePreview();
@@ -4665,8 +4724,9 @@
     if (!currentFileName) return;
     retryCount = retryCount || 0;
     
-    var text = mdTextarea.value;
-    if (!text.trim()) return;
+    applyAllTempSaves();
+    var text = exportMD();
+    if (!text || !text.trim()) return;
     
     addLog(currentFileName, 'saving', '正在保存...');
     autoSaveIndicator.textContent = '保存中...';
@@ -4867,22 +4927,23 @@
   
   // 节点信息暂存按钮（与tempSaveModalBtn逻辑一致）
   document.getElementById('tempSaveNodeInfoPanelBtn').addEventListener('click', function() {
-    if (!selectedId) {
-      showToastMsg('请先选中节点');
+    if (!currentFileName && data && data.title) {
+      currentFileName = data.title + '.md';
+      currentFileEnv = 'local';
+    }
+    if (!currentFileName) {
+      showToastMsg('请先打开文件');
       return;
     }
-    var node = findNode(data, selectedId);
-    if (!node) return;
-    
-    var text = nodeInfoTextarea.value;
-    var key = 'tempSave_nodeInfo_' + currentFileName + '_' + node.id;
-    localStorage.setItem(key, JSON.stringify({ text: text, time: Date.now() }));
-    
-    syncCodeBlockFieldsToNode(node, text);
-
-    document.getElementById('nodeTextarea').value = text;
+    var node = selectedId ? findNode(data, selectedId) : null;
+    if (node) {
+      var text = nodeInfoTextarea.value;
+      syncCodeBlockFieldsToNode(node, text);
+      document.getElementById('nodeTextarea').value = text;
+    }
+    var count = tempSaveAllNodes();
     syncMdPanelFromCanvas();
-    showToastMsg('已暂存节点信息全文');
+    showToastMsg('已暂存全部 ' + count + ' 个节点');
     render();
   });
   
@@ -4894,6 +4955,7 @@
     syncCodeBlockFieldsToNode(node, text);
     document.getElementById('nodeTextarea').value = text;
     if (typeof mdNodeTextarea !== 'undefined' && mdNodeTextarea) mdNodeTextarea.value = text;
+    scheduleAutoTempSave();
   });
 
 
@@ -6172,9 +6234,11 @@
         nodeModalText = document.getElementById('modalTextarea').value;
       }
       var node = getSelected();
-      if (!node) {
-        showToastMsg('请先选中节点');
-        return;
+      if (node) {
+        syncCodeBlockFieldsToNode(node, nodeModalText);
+        document.getElementById('nodeTextarea').value = nodeModalText;
+        if (typeof nodeInfoTextarea !== 'undefined' && nodeInfoTextarea) nodeInfoTextarea.value = nodeModalText;
+        if (typeof mdNodeTextarea !== 'undefined' && mdNodeTextarea) mdNodeTextarea.value = nodeModalText;
       }
       if (!currentFileName && data && data.title) {
         currentFileName = data.title + '.md';
@@ -6184,20 +6248,9 @@
         showToastMsg('请先打开文件');
         return;
       }
-      
-      var key = 'tempSave_nodeInfo_' + currentFileName + '_' + node.id;
-      var result = safeLocalStorageSet(key, JSON.stringify({ text: nodeModalText, time: Date.now() }));
-      if (!result.success) {
-        showToastMsg('暂存失败：' + result.error);
-        return;
-      }
-      
-      syncCodeBlockFieldsToNode(node, nodeModalText);
-      document.getElementById('nodeTextarea').value = nodeModalText;
-      if (typeof nodeInfoTextarea !== 'undefined' && nodeInfoTextarea) nodeInfoTextarea.value = nodeModalText;
-      if (typeof mdNodeTextarea !== 'undefined' && mdNodeTextarea) mdNodeTextarea.value = nodeModalText;
+      var count = tempSaveAllNodes();
       syncMdPanelFromCanvas();
-      showToastMsg('已暂存节点信息全文');
+      showToastMsg('已暂存全部 ' + count + ' 个节点');
     } catch(e) {
       showToastMsg('暂存失败：' + e.message);
     }
@@ -6231,11 +6284,6 @@
   // Temp save: Node Info textarea (in info panel)
   document.getElementById('tempSaveNodeInfoBtn').addEventListener('click', function() {
     try {
-      var node = getSelected();
-      if (!node) {
-        showToastMsg('请先选中节点');
-        return;
-      }
       if (!currentFileName && data && data.title) {
         currentFileName = data.title + '.md';
         currentFileEnv = 'local';
@@ -6244,18 +6292,16 @@
         showToastMsg('请先打开文件');
         return;
       }
-      var text = document.getElementById('nodeTextarea').value;
-      var key = 'tempSave_nodeInfo_' + currentFileName + '_' + node.id;
-      var result = safeLocalStorageSet(key, JSON.stringify({ text: text, time: Date.now() }));
-      if (!result.success) {
-        showToastMsg('暂存失败：' + result.error);
-        return;
+      var node = getSelected();
+      if (node) {
+        var text = document.getElementById('nodeTextarea').value;
+        syncCodeBlockFieldsToNode(node, text);
+        if (typeof nodeInfoTextarea !== 'undefined' && nodeInfoTextarea) nodeInfoTextarea.value = text;
+        if (typeof mdNodeTextarea !== 'undefined' && mdNodeTextarea) mdNodeTextarea.value = text;
       }
-      syncCodeBlockFieldsToNode(node, text);
-      if (typeof nodeInfoTextarea !== 'undefined' && nodeInfoTextarea) nodeInfoTextarea.value = text;
-      if (typeof mdNodeTextarea !== 'undefined' && mdNodeTextarea) mdNodeTextarea.value = text;
+      var count = tempSaveAllNodes();
       syncMdPanelFromCanvas();
-      showToastMsg('已暂存节点元数据');
+      showToastMsg('已暂存全部 ' + count + ' 个节点');
     } catch(e) {
       showToastMsg('暂存失败：' + e.message);
     }
@@ -6628,6 +6674,7 @@
   // --- 浏览器关闭/切换防护 ---
   // 1. beforeunload: 关闭标签页前提示未保存
   window.addEventListener('beforeunload', function(e) {
+    doAutoTempSave();
     if (hasUnsavedChanges()) {
       e.preventDefault();
       e.returnValue = '';
@@ -6637,27 +6684,28 @@
 
   // 2. visibilitychange: 切换标签页/最小化时自动保存
   document.addEventListener('visibilitychange', function() {
-    if (document.visibilityState === 'hidden' && hasUnsavedChanges()) {
-      // 页面隐藏且有未保存更改，立即触发保存
-      applyAllTempSaves();
-      if (currentFileName && data) {
-        var text = exportMD();
-        if (text && text.trim()) {
-          var apiUrl = currentFileEnv === 'local' ? '/api/todo/save' : '/api/todo/save-prod';
-          fetch(apiUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ file: currentFileName, content: text })
-          })
-          .then(function(r) { return r.json(); })
-          .then(function(result) {
-            if (result.success) {
-              saveDataSnapshot();
-            }
-          })
-          .catch(function() {
-            // 静默失败，至少已暂存到localStorage
-          });
+    if (document.visibilityState === 'hidden') {
+      doAutoTempSave();
+      if (hasUnsavedChanges()) {
+        applyAllTempSaves();
+        if (currentFileName && data) {
+          var text = exportMD();
+          if (text && text.trim()) {
+            var apiUrl = currentFileEnv === 'local' ? '/api/todo/save' : '/api/todo/save-prod';
+            fetch(apiUrl, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ file: currentFileName, content: text })
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(result) {
+              if (result.success) {
+                saveDataSnapshot();
+              }
+            })
+            .catch(function() {
+            });
+          }
         }
       }
     }

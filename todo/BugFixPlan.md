@@ -1,11 +1,68 @@
-# 全面审查报告：节点元数据逻辑问题、实施状态与解决方案
+BugFixPlan
 
-## 一、已实施修复的审查
+```
+requirementUUID::37abb1a5-8c2f-42ef-ad17-1101def2c23a
+requirementID::n79
+requirementPriority::2️⃣
+requirementMainline::🟢
+requirementStatus::new
+requirementModule::
+requirementCreated::2026-06-16 22:18
+requirementEstDays::0
+requirementAITaskJournal::
+```
 
-### ✅ BUG #1：`doCreateNewFile()` 默认内容格式 — 已正确实施
+22
+
+## 一、已实施修复的审查2
+
+```
+requirementUUID::d6a22b59-940a-44a1-8932-203956cc1548
+requirementID::n80
+requirementPriority::2️⃣
+requirementMainline::🟢
+requirementStatus::new
+requirementModule::
+requirementCreated::2026-06-16 22:18
+requirementEstDays::0
+requirementAITaskJournal::
+```
+
+> goal & principle
+>
+> description
+>
+
+### ✅ BUG #11：`doCreateNewFile()` 默认内容格式 — 已正确实施
+
+```
+requirementUUID::cf220e7b-f604-4ba8-9e55-e0248e62026d
+requirementID::n81
+requirementPriority::2️⃣
+requirementMainline::🟢
+requirementStatus::new
+requirementModule::
+requirementCreated::2026-06-16 22:18
+requirementEstDays::0
+requirementAITaskJournal::
+```
+
 [doCreateNewFile()](file:///Users/ed/Documents/edwin/Paucode/VibeCodingSOP/index.html#L2592) 中已使用 `requirement` 前缀和 UUID 字段，格式正确。
 
 ### ✅ BUG #3/#4：request 提取正则 — 已正确实施
+
+```
+requirementUUID::cddaf44c-7e60-45ce-97ed-55cebeef7600
+requirementID::n82
+requirementPriority::2️⃣
+requirementMainline::🟢
+requirementStatus::new
+requirementModule::
+requirementCreated::2026-06-16 22:18
+requirementEstDays::0
+requirementAITaskJournal::
+```
+
 [extractRequestFromNodeInfo()](file:///Users/ed/Documents/edwin/Paucode/VibeCodingSOP/index.html#L780) 和 [extractCodeBlockFromNodeInfo()](file:///Users/edwin/Paucode/VibeCodingSOP/index.html#L793) 已用位置索引替代正则，已在以下位置正确使用：
 - `tempSaveNodeInfoBtn` (L6218)
 - `tempSaveNodeInfoPanelBtn` (L4857)
@@ -15,19 +72,87 @@
 - `updateNodeJournal()` (L1909)
 
 ### ✅ BUG #5：`updateNodeJournal()` 覆盖用户修改 — 已部分实施
+
+```
+requirementUUID::f4cbb066-01a2-491c-b82d-bb406b0949bf
+requirementID::n83
+requirementPriority::2️⃣
+requirementMainline::🟢
+requirementStatus::new
+requirementModule::
+requirementCreated::2026-06-16 22:18
+requirementEstDays::0
+requirementAITaskJournal::
+```
+
 [updateNodeJournal()](file:///Users/edwin/Paucode/VibeCodingSOP/index.html#L1909) 中已添加轻量级同步逻辑（L1933-L1955），先从 textarea 提取 request 和代码块字段再重新生成。
 
 ### ✅ BUG #6：`updateNodeJournal()` 清除暂存 — 已正确实施
+
+```
+requirementUUID::cae40ebd-a1c3-40ba-9290-cd78f01b5203
+requirementID::n84
+requirementPriority::2️⃣
+requirementMainline::🟢
+requirementStatus::new
+requirementModule::
+requirementCreated::2026-06-16 22:18
+requirementEstDays::0
+requirementAITaskJournal::
+```
+
 L1958-L1961 已改为更新暂存内容而非清除。
 
 ### ✅ BUG #2：`parseMD()` 容错处理 — 已正确实施
+
+```
+requirementUUID::0fc865c5-1228-4151-9858-bb0f0657e74f
+requirementID::n85
+requirementPriority::2️⃣
+requirementMainline::🟢
+requirementStatus::new
+requirementModule::
+requirementCreated::2026-06-16 22:18
+requirementEstDays::0
+requirementAITaskJournal::
+```
+
 [parseMD()](file:///Users/edwin/Paucode/VibeCodingSOP/index.html#L2322) L2322-L2362 已添加 `fallbackMatch` 正则处理非标准前缀。
 
 ---
 
 ## 二、发现的问题清单
 
+```
+requirementUUID::4e62def4-a101-42c7-9a92-3a90d820e7bf
+requirementID::n86
+requirementPriority::2️⃣
+requirementMainline::🟢
+requirementStatus::new
+requirementModule::
+requirementCreated::2026-06-16 22:18
+requirementEstDays::0
+requirementAITaskJournal::
+```
+
+> goal & principle
+>
+> description
+>
+
 ### 🔴 问题 A（遗漏）：`tempSaveNodeInfoPanelBtn` 暂存时未同步元数据字段到 node 对象
+
+```
+requirementUUID::085628e3-96ae-423c-a83f-46c035914936
+requirementID::n87
+requirementPriority::2️⃣
+requirementMainline::🟢
+requirementStatus::new
+requirementModule::
+requirementCreated::2026-06-16 22:18
+requirementEstDays::0
+requirementAITaskJournal::
+```
 
 **位置**：[index.html:4857](file:///Users/ed/Documents/edwin/Paucode/VibeCodingSOP/index.html#L4857)
 
@@ -36,37 +161,22 @@ L1958-L1961 已改为更新暂存内容而非清除。
 var reqPart = extractRequestFromNodeInfo(text);
 node.request = reqPart;
 node.nodeInfo = text;
-```
-只更新了 `node.request` 和 `node.nodeInfo`，**没有解析代码块中的 Status、Priority、Mainline 等字段**同步到 node 对象。
-
-**对比**：`tempSaveNodeInfoBtn`（L6218）和 `applyAllTempSaves()`（L6371）和 `syncPanelToNode()`（L1805）都已经有解析代码块字段的逻辑，但 `tempSaveNodeInfoPanelBtn` 遗漏了。
-
-**影响**：用户在"节点信息面板"中修改了 Status/Priority 等字段后点击暂存，这些修改只存在于 `node.nodeInfo` 文本中，不会同步到 `node.status`/`node.priority` 等结构化字段。后续 `generateMetadata()` 或 `exportMD()` 会用旧的字段值重新生成，覆盖用户修改。
-
-**解决方案**：在 `tempSaveNodeInfoPanelBtn` 的点击事件中，添加与 `tempSaveNodeInfoBtn` 相同的代码块解析逻辑：
-```javascript
-var codeBlock = extractCodeBlockFromNodeInfo(text);
-if (codeBlock) {
-  var codeLines = codeBlock.split('\n');
-  var typeLabel = TYPE_LABELS[node.type] || 'requirement';
-  for (var k = 0; k < codeLines.length; k++) {
-    var ci = codeLines[k].indexOf('::');
-    if (ci === -1) continue;
-    var mkey = codeLines[k].substring(0, ci).trim();
-    var mval = codeLines[k].substring(ci + 2).trim();
-    if (mkey === typeLabel + 'Status') node.status = STATUS_REVERSE[mval] || 'N';
-    else if (mkey === typeLabel + 'Priority') { if (mval) node.priority = mval; }
-    else if (mkey === typeLabel + 'Mainline') node.mainline = mval || '🟢';
-    else if (mkey === typeLabel + 'Module') node.module = mval || '';
-    else if (mkey === typeLabel + 'UUID') { if (mval) node.uuid = mval; }
-    else if (mkey === typeLabel + 'AITaskJournal') node.aiTaskJournal = mval || '';
-  }
-}
-```
 
 ---
 
 ### 🔴 问题 B（遗漏）：`mdNodeTextarea` 编辑后未同步回 node 对象
+
+```
+requirementUUID::7d952b7a-f186-44b9-aa5c-345bdf4c3e14
+requirementID::n88
+requirementPriority::2️⃣
+requirementMainline::🟢
+requirementStatus::new
+requirementModule::
+requirementCreated::2026-06-16 22:18
+requirementEstDays::0
+requirementAITaskJournal::
+```
 
 **位置**：[index.html:4403](file:///Users/ed/Documents/edwin/Paucode/VibeCodingSOP/index.html#L4403)
 
@@ -77,38 +187,22 @@ mdNodeTextarea.addEventListener('input', function() {
     updateNodePreview();
   }
 });
-```
-`mdNodeTextarea`（MD面板中的节点信息编辑框）的 `input` 事件只更新预览，**完全没有同步回 node 对象**。
-
-**对比**：`nodeTextarea`（右侧信息栏的编辑框）的 `input` 事件会调用 `syncPanelToNode()`，完整同步。
-
-**影响**：用户在 MD 面板的节点信息编辑框中修改内容后，如果不手动暂存，所有修改不会被同步到 node 对象。保存时这些修改会丢失。
-
-**解决方案**：为 `mdNodeTextarea` 的 `input` 事件添加同步逻辑：
-```javascript
-mdNodeTextarea.addEventListener('input', function() {
-  // 同步到 node 对象
-  var node = getSelected();
-  if (node) {
-    var text = mdNodeTextarea.value;
-    var reqPart = extractRequestFromNodeInfo(text);
-    node.request = reqPart;
-    node.nodeInfo = text;
-    // 解析代码块字段
-    var codeBlock = extractCodeBlockFromNodeInfo(text);
-    if (codeBlock) {
-      // ... 同样的解析逻辑
-    }
-  }
-  if (!mdNodeEditMode) {
-    updateNodePreview();
-  }
-});
-```
 
 ---
 
 ### 🔴 问题 C（遗漏）：`nodeInfoTextarea` 编辑后未同步回 node 对象
+
+```
+requirementUUID::e617b59e-218e-420b-8c15-a2920f6a3e2d
+requirementID::n89
+requirementPriority::2️⃣
+requirementMainline::🟢
+requirementStatus::new
+requirementModule::
+requirementCreated::2026-06-16 22:18
+requirementEstDays::0
+requirementAITaskJournal::
+```
 
 **位置**：[index.html:4881](file:///Users/edwin/Paucode/VibeCodingSOP/index.html#L4881)
 
@@ -117,16 +211,20 @@ mdNodeTextarea.addEventListener('input', function() {
 nodeInfoTextarea.addEventListener('input', function() {
   // 编辑模式下不实时更新预览，切换到预览时更新
 });
-```
-`nodeInfoTextarea`（节点信息面板的编辑框）的 `input` 事件**完全为空**，既不更新预览，也不同步到 node 对象。
-
-**影响**：与问题 B 相同，用户在此编辑框中的修改不会同步到 node 对象。
-
-**解决方案**：同问题 B，添加同步逻辑。
-
----
 
 ### 🟡 问题 D（错误）：`updateNodeJournal()` 中的逻辑顺序问题 — request 被覆盖
+
+```
+requirementUUID::d5d18aa8-bc70-4435-9aed-b2e24bbeb522
+requirementID::n90
+requirementPriority::2️⃣
+requirementMainline::🟢
+requirementStatus::new
+requirementModule::
+requirementCreated::2026-06-16 22:18
+requirementEstDays::0
+requirementAITaskJournal::
+```
 
 **位置**：[index.html:1909](file:///Users/edwin/Paucode/VibeCodingSOP/index.html#L1909)
 
@@ -155,11 +253,20 @@ function updateNodeJournal(nodeId, fileName, filePath) {
   // 步骤4：更新暂存和刷新 UI
   // ...
 }
-```
-
----
 
 ### 🟡 问题 E（边界问题）：`extractCodeBlockFromNodeInfo()` 不处理多代码块
+
+```
+requirementUUID::xxx
+requirementID::n91
+requirementPriority::2️⃣
+requirementMainline::🟢
+requirementStatus::new
+requirementModule::
+requirementCreated::2026-06-16 22:18
+requirementEstDays::0
+requirementAITaskJournal::
+```
 
 **位置**：[index.html:793](file:///Users/edwin/Paucode/VibeCodingSOP/index.html#L793)
 
@@ -174,23 +281,12 @@ function extractCodeBlockFromNodeInfo(text) {
   var codeContent = text.substring(firstIdx + 4, endIdx);
   return codeContent;
 }
-```
-
-**问题**：如果 `node.request` 正文内容中包含代码块（如用户写了示例代码），`extractCodeBlockFromNodeInfo` 会匹配到**正文中的代码块开始标记**而非元数据代码块的结束标记。例如：
-
-```
 标题
 
-```
-requirementUUID::xxx
-...
-```
 
 正文中有代码示例：
 ```python
 print("hello")
-```
-```
 
 此时 `text.indexOf('\n```', firstIdx + 3)` 会匹配到正文中的 ` ``` ` 而非元数据代码块的结束标记。
 
@@ -217,13 +313,20 @@ function extractCodeBlockFromNodeInfo(text) {
   }
   return null; // 没有找到结束标记
 }
-```
-
-同理，`extractRequestFromNodeInfo` 也需要配套修改，确保从正确的代码块结束位置开始提取 request。
-
----
 
 ### 🟡 问题 F（遗漏）：`tempSaveNodeInfoBtn` 暂存时未同步到 `nodeInfoTextarea`
+
+```
+requirementUUID::b715ec63-f5b5-4dad-a96f-1bd9b88292b4
+requirementID::n92
+requirementPriority::2️⃣
+requirementMainline::🟢
+requirementStatus::new
+requirementModule::
+requirementCreated::2026-06-16 22:18
+requirementEstDays::0
+requirementAITaskJournal::
+```
 
 **位置**：[index.html:6218](file:///Users/ed/Documents/edwin/Paucode/VibeCodingSOP/index.html#L6218)
 
@@ -232,21 +335,22 @@ function extractCodeBlockFromNodeInfo(text) {
 **对比**：`tempSaveNodeInfoPanelBtn`（L4857）暂存后同步了 `nodeTextarea`：
 ```javascript
 document.getElementById('nodeTextarea').value = text;
-```
-
-**影响**：用户在右侧信息栏点击暂存后，切换到节点信息面板时，`nodeInfoTextarea` 显示的仍是旧内容。
-
-**解决方案**：在 `tempSaveNodeInfoBtn` 暂存成功后，同步更新 `nodeInfoTextarea`：
-```javascript
-// 同步到节点信息面板
-if (nodeInfoTextarea) nodeInfoTextarea.value = text;
-// 同步到MD面板的节点编辑框
-if (mdNodeTextarea) mdNodeTextarea.value = text;
-```
 
 ---
 
 ### 🟡 问题 G（遗漏）：`syncPanelFromNode()` 暂存恢复时未解析代码块字段
+
+```
+requirementUUID::46a857d3-0053-47e7-92f4-5d2eddf8da11
+requirementID::n93
+requirementPriority::2️⃣
+requirementMainline::🟢
+requirementStatus::new
+requirementModule::
+requirementCreated::2026-06-16 22:18
+requirementEstDays::0
+requirementAITaskJournal::
+```
 
 **位置**：[index.html:1747](file:///Users/edwin/Paucode/VibeCodingSOP/index.html#L1747)
 
@@ -257,17 +361,20 @@ if (tempText !== null) {
   node.request = reqPart;
   node.nodeInfo = metadataText;
 }
-```
-
-只更新了 `node.request` 和 `node.nodeInfo`，**没有解析代码块中的 Status/Priority 等字段**。
-
-**影响**：暂存恢复时，如果用户在暂存前修改了 Status 等字段，恢复后这些修改只存在于 `node.nodeInfo` 文本中，不会同步到结构化字段。后续操作可能覆盖。
-
-**解决方案**：添加与 `applyAllTempSaves()` 相同的代码块解析逻辑。
-
----
 
 ### 🟢 问题 H（过度延展）：`updateNodeJournal()` 中的轻量级同步过于复杂
+
+```
+requirementUUID::484cca6e-360e-4d6d-afb2-b75b016cec17
+requirementID::n94
+requirementPriority::2️⃣
+requirementMainline::🟢
+requirementStatus::new
+requirementModule::
+requirementCreated::2026-06-16 22:18
+requirementEstDays::0
+requirementAITaskJournal::
+```
 
 **位置**：[index.html:1933](file:///Users/edwin/Paucode/VibeCodingSOP/index.html#L1933)
 
@@ -279,7 +386,36 @@ if (tempText !== null) {
 
 ## 三、尚未发现的潜在问题
 
+```
+requirementUUID::4350e10e-2d0f-4b24-8844-20c40c10fa67
+requirementID::n95
+requirementPriority::2️⃣
+requirementMainline::🟢
+requirementStatus::new
+requirementModule::
+requirementCreated::2026-06-16 22:18
+requirementEstDays::0
+requirementAITaskJournal::
+```
+
+> goal & principle
+>
+> description
+>
+
 ### 🔴 新发现 #1：`nodeTextarea` 和 `nodeInfoTextarea` / `mdNodeTextarea` 三个编辑框之间缺乏双向同步
+
+```
+requirementUUID::95631689-9a25-44ab-bab3-f65303253f56
+requirementID::n96
+requirementPriority::2️⃣
+requirementMainline::🟢
+requirementStatus::new
+requirementModule::
+requirementCreated::2026-06-16 22:18
+requirementEstDays::0
+requirementAITaskJournal::
+```
 
 **现状**：系统中有三个可以编辑节点元数据的文本框：
 1. `nodeTextarea`（右侧信息栏）— 有 `input` → `syncPanelToNode()` 同步
@@ -296,6 +432,18 @@ if (tempText !== null) {
 
 ### 🔴 新发现 #2：`saveFile()` 保存后清除暂存，但 `updateNodeJournal()` 更新暂存后未触发保存
 
+```
+requirementUUID::23dc5bf4-be7d-41e6-b82b-ac7b07d24021
+requirementID::n97
+requirementPriority::2️⃣
+requirementMainline::🟢
+requirementStatus::new
+requirementModule::
+requirementCreated::2026-06-16 22:18
+requirementEstDays::0
+requirementAITaskJournal::
+```
+
 **现状**：
 - `saveFile()` 保存成功后调用 `clearTempSavesForFile()` 清除暂存
 - `updateNodeJournal()` 更新暂存内容但不触发保存
@@ -308,12 +456,20 @@ if (tempText !== null) {
 if (currentFileName) {
   saveFile();
 }
-```
-或者至少提示用户保存。
-
----
 
 ### 🟡 新发现 #3：`parseMD()` 中 `fallbackMatch` 的类型推断可能不准确
+
+```
+requirementUUID::922cd4d0-1bc6-4971-8194-4868f0b42dd9
+requirementID::n98
+requirementPriority::2️⃣
+requirementMainline::🟢
+requirementStatus::new
+requirementModule::
+requirementCreated::2026-06-16 22:18
+requirementEstDays::0
+requirementAITaskJournal::
+```
 
 **位置**：[index.html:2322](file:///Users/edwin/Paucode/VibeCodingSOP/index.html#L2322)
 
@@ -332,11 +488,20 @@ if (fallbackMatch) {
     // ... 处理
   }
 }
-```
-
----
 
 ### 🟡 新发现 #4：`exportMD()` 中 request 为空时的默认模板与 `generateMetadata()` 不一致
+
+```
+requirementUUID::1700ca45-77c9-42f8-9f1c-08d7c8fdcf82
+requirementID::n99
+requirementPriority::2️⃣
+requirementMainline::🟢
+requirementStatus::new
+requirementModule::
+requirementCreated::2026-06-16 22:18
+requirementEstDays::0
+requirementAITaskJournal::
+```
 
 **位置**：
 - [exportMD()](file:///Users/edwin/Paucode/VibeCodingSOP/index.html#L2440)：空 request 时输出 `> goal & principle\n>\n> description\n>\n\n***`
@@ -350,6 +515,18 @@ if (fallbackMatch) {
 
 ### 🟡 新发现 #5：`applyAllTempSaves()` 中 `node.nodeInfo = text` 可能覆盖已同步的字段
 
+```
+requirementUUID::f87064b0-9e29-42f0-bf7b-264082979ebc
+requirementID::n100
+requirementPriority::2️⃣
+requirementMainline::🟢
+requirementStatus::new
+requirementModule::
+requirementCreated::2026-06-16 22:18
+requirementEstDays::0
+requirementAITaskJournal::
+```
+
 **位置**：[index.html:6371](file:///Users/ed/Documents/edwin/Paucode/VibeCodingSOP/index.html#L6371)
 
 **现状**：
@@ -357,15 +534,20 @@ if (fallbackMatch) {
 node.request = reqPart;
 // ... 解析代码块字段到 node.status, node.priority 等
 node.nodeInfo = text; // ← 最后一步用暂存文本覆盖 nodeInfo
-```
-
-**问题**：`node.nodeInfo = text` 将暂存的原始文本设为 nodeInfo，但此时 `node.status` 等字段已经从代码块解析更新了。如果暂存文本中的 Status 与解析出的 Status 不一致（理论上不应该，但边界情况可能存在），`nodeInfo` 和结构化字段之间就不一致了。
-
-**建议**：将 `node.nodeInfo = text` 改为 `node.nodeInfo = generateMetadata(node)`，确保 nodeInfo 与结构化字段始终一致。但这需要确保 `extractRequestFromNodeInfo` 和 `extractCodeBlockFromNodeInfo` 的提取是准确的。
-
----
 
 ## 四、开发计划
+
+```
+requirementUUID::1163de03-15ee-458b-a002-92cc995916cf
+requirementID::n101
+requirementPriority::2️⃣
+requirementMainline::🟢
+requirementStatus::new
+requirementModule::
+requirementCreated::2026-06-16 22:18
+requirementEstDays::0
+requirementAITaskJournal::
+```
 
 按优先级排序：
 

@@ -1211,11 +1211,11 @@
       .catch(function() {});
 
     function sendUpdateJournal(fileName) {
-      var filePath = WORK_DIR ? (WORK_DIR + '/prompt/.historylog/' + fileName) : ('../prompt/.historylog/' + fileName);
+      var relativePath = '../prompt/.historylog/' + fileName;
       parent.postMessage({
         type: 'UPDATE_JOURNAL',
         fileName: fileName,
-        filePath: filePath,
+        filePath: relativePath,
         selectedNodeIds: selectedNodeIds
       }, '*');
     }
