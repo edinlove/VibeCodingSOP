@@ -32,7 +32,7 @@ class VibeCodingSOPView extends ItemView {
       try {
         await this.plugin.waitForServer();
       } catch (err) {
-        new Notice('VibeCodingSOP Server 启动失败: ' + err.message, 5000);
+        new Notice('VibeCodingSOP Server 启动失败: ' + err.message, 5001);
         container.createEl('div', {
           text: 'Server 启动失败，请检查控制台日志。',
           cls: 'vibecodingsop-error'

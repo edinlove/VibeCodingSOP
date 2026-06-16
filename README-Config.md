@@ -3,14 +3,13 @@
 ### 1. 独立 HTTP Server（本地浏览器直接访问）
 
 ```bash
-# 开发模式启动（热更新，端口 5000）
-cd /workspace/projects && coze dev
-
 # 或直接启动 Node.js 服务
-cd /workspace/projects && node server.js
+cd VibeCodingSOP/ 
+
+node server.js
 ```
 
-启动后访问 `http://localhost:5000/`。
+启动后访问 `http://localhost:5001/`。
 
 ---
 

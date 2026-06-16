@@ -69,7 +69,7 @@ pnpm install
 pnpm start
 ```
 
-然后打开浏览器访问 `http://localhost:5000`
+然后打开浏览器访问 `http://localhost:5001`
 
 ## 统一构建系统
 
