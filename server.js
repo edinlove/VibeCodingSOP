@@ -1239,7 +1239,8 @@ function startServer(customPort) {
 }
 
 if (require.main === module) {
-  startServer();
+  var cmdPort = process.argv[2] ? parseInt(process.argv[2], 10) : undefined;
+  startServer(cmdPort);
 }
 
 module.exports = { startServer, server };

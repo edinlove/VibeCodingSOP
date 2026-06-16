@@ -7,9 +7,11 @@
 cd VibeCodingSOP/ 
 
 node server.js
+
+如果要指定端口号，则：node server.js 8889
 ```
 
-启动后访问 `http://localhost:5001/`。
+启动后访问 `http://localhost:5501/`。
 
 ---
 
@@ -35,6 +37,9 @@ npm run build:obsidian
 
 # 构建并直接安装到指定 Vault
 node scripts/build-obsidian.js --install=/path/to/Vault/.obsidian/plugins/vibecodingsop
+
+eg. 
+node scripts/build-obsidian.js --install=/Users/ed/Documents/edwin/Edaily/.obsidian/plugins/vibecodingsop/
 ```
 
 构建后产物位于 `release/vibecodingsop/`，复制到 Vault 的 `.obsidian/plugins/vibecodingsop/` 目录下即可。

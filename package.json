@@ -2,8 +2,13 @@
   "name": "vibecodingsop",
   "displayName": "VibeCodingSOP",
   "description": "思维导图编辑器，支持Markdown导入导出、节点信息管理",
-  "version": "1.0.7",
-  "publisher": "edpau",
+  "version": "1.0.8",
+  "publisher": "EdPau",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/EdPau/VibeCodingSOP.git"
+  },
   "icon": "assets/icon-logo.png",
   "engines": {
     "vscode": "^1.74.0"

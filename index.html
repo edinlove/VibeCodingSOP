@@ -5981,6 +5981,7 @@
     if (promptPanelOpen) {
       closeAllPanels();
       promptPanel.classList.add('prompt-panel-open');
+      sendOptimizationNodeData();
     } else {
       promptPanel.classList.remove('prompt-panel-open');
     }

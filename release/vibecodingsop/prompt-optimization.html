@@ -160,20 +160,11 @@
     window.addEventListener('message', function(e) {
       if (e.data && e.data.type === 'SELECTED_NODES_DATA') {
         var newIds = e.data.selectedIds || [];
-        var idsChanged = newIds.length !== previousSelectedIds.length ||
-                         newIds.some(function(id, i) { return id !== previousSelectedIds[i]; });
         currentTree = e.data.tree;
         selectedNodeIds = newIds;
+        previousSelectedIds = newIds.slice();
         console.log('[Optimization] Received tree + selectedIds:', selectedNodeIds);
         initMetadataSection();
-        // 如果选中节点变化，自动刷新一次以获取最新节点信息
-        if (idsChanged && newIds.length > 0) {
-          previousSelectedIds = newIds.slice();
-          setTimeout(function() {
-            showToast('正在刷新节点信息...');
-            parent.postMessage({type: 'REQUEST_NODES'}, '*');
-          }, 300);
-        }
       }
     });
 

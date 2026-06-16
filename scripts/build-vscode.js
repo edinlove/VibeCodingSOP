@@ -46,8 +46,8 @@ function build() {
   const outputPath = path.join(RELEASE_DIR, outputName);
 
   try {
-    console.log(`[BUILD] 执行: npx @vscode/vsce package --no-dependencies -o ${outputPath}`);
-    execSync(`npx @vscode/vsce package --no-dependencies -o "${outputPath}"`, {
+    console.log(`[BUILD] 执行: npx @vscode/vsce package --no-dependencies --allow-missing-repository -o ${outputPath}`);
+    execSync(`npx @vscode/vsce package --no-dependencies --allow-missing-repository -o "${outputPath}"`, {
       cwd: PROJECT_ROOT,
       stdio: 'inherit'
     });
