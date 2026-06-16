@@ -31,7 +31,12 @@ requirementStatus::new
 requirementModule::
 requirementCreated::2026-06-16 18:29
 requirementEstDays::0
-requirementAITaskJournal::
+requirementAITaskJournal::[[/Users/ed/Documents/edwin/Paucode/VibeCodingSOP/prompt/.historylog/prompt-20260616184903-953abae8.md]]
 ```
 
-test modify metadata
+> goal & principle
+>
+> description
+>
+
+[[/Users/ed/Documents/edwin/Paucode/VibeCodingSOP/prompt/.historylog/prompt-20260616184903-953abae8.md]]
